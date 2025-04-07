@@ -16,6 +16,11 @@ private:
     int id;
     std::string name;
     std::string password;
+    enum role {
+        admin,
+        teacher,
+        student
+    };
 
 public:
     User(); // Default constructor
