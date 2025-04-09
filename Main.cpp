@@ -5,12 +5,15 @@
 #include <string>
 #include <nlohmann/json.hpp>
 #include "users/User.h"
+#include "index/Index.h"
+#include <thread>
+#include <chrono>
 using namespace std;
 using json = nlohmann::json;
 
 int main() {
-    User user(1, "John Doe", "password123");
-    json j = user.toJson();
-    cout << "User JSON: " << j.dump(4) << endl;
-    return 0;
+    printIndex();
+    this_thread::sleep_for(chrono::seconds(3));
+    system("clear");
+    this_thread::sleep_for(chrono::seconds(2));
 }
