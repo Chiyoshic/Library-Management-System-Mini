@@ -8,4 +8,6 @@
 
 void printIndex();
 void printMenu();
+void admin_login_page();
+void student_login_page();
 #endif //INDEX_H

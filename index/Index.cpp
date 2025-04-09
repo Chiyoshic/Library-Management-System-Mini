@@ -3,6 +3,9 @@
 //
 #include <iostream>
 #include "Index.h"
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
 using namespace std;
 
 void printIndex() {
@@ -22,8 +25,45 @@ void printIndex() {
     std::cout << "                                |___/                  " << std::endl;
 }
 
+void admin_login_page() {
+
+}
+
+void student_login_page() {
+
+}
+
+
 void printMenu() {
-    std::cout << "1. Login" << std::endl;
-    std::cout << "2. Register" << std::endl;
-    std::cout << "3. Exit" << std::endl;
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+
+    // 创建登录按钮
+    auto admin_button = Button("我是管理员", admin_login_page);
+    auto student_button = Button("我是学生", student_login_page);
+
+
+    auto roleForm = Container::Horizontal({
+        admin_button,
+        student_button
+    });
+
+    // 主渲染函数
+    auto renderer = Renderer(roleForm, [&] {
+        return vbox({
+            text("欢迎使用图书管理系统 V0.1") | bold | hcenter,
+            vbox({
+                text("选择你的角色") | bold | hcenter,
+                separator(),
+                hbox(admin_button->Render(), student_button->Render()) | hcenter,
+                separator()
+            }) | border
+        });
+    });
+
+    // 启动交互循环
+    screen.Loop(renderer);
+
 }
