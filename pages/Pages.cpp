@@ -2,7 +2,7 @@
 // Created by Chiyoshi on 2025/4/9.
 //
 #include <iostream>
-#include "Index.h"
+#include "Pages.h"
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
