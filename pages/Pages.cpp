@@ -26,25 +26,138 @@ void printIndex() {
 }
 
 void admin_login_page() {
+    using namespace ftxui;
 
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 账户和密码变量
+    std::string username;
+    std::string password;
+    
+    // 创建输入框，密码使用*号显示
+    InputOption password_option;
+    password_option.password = true;
+    
+    auto username_input = Input(&username, "请输入管理员账号");
+    auto password_input = Input(&password, "请输入密码", password_option);
+    
+    // 创建登录按钮
+    bool login_clicked = false;
+    auto login_button = Button("登录", [&] { login_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", screen.ExitLoopClosure());
+    
+    // 组合所有组件
+    auto container = Container::Vertical({
+        username_input,
+        password_input,
+        Container::Horizontal({
+            login_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("管理员登录") | bold | hcenter,
+            separator(),
+            vbox({
+                hbox(text(" 账号: "), username_input->Render()) | hcenter,
+                hbox(text(" 密码: "), password_input->Render()) | hcenter,
+                separator(),
+                hbox(login_button->Render(), back_button->Render()) | hcenter,
+            }) | border,
+        });
+    });
+
+    // 处理登录按钮点击事件
+    auto login_handler = CatchEvent(renderer, [&](Event event) {
+        if (login_clicked) {
+            // TODO: 实现真正的登录验证逻辑
+            std::cout << "管理员尝试登录: " << username << std::endl;
+            login_clicked = false;
+            screen.ExitLoopClosure()();
+            return true;
+        }
+        return false;
+    });
+
+    screen.Loop(login_handler);
 }
 
 void student_login_page() {
+    using namespace ftxui;
 
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 账户和密码变量
+    std::string username;
+    std::string password;
+    
+    // 创建输入框，密码使用*号显示
+    InputOption password_option;
+    password_option.password = true;
+    
+    auto username_input = Input(&username, "请输入学生学号");
+    auto password_input = Input(&password, "请输入密码", password_option);
+    
+    // 创建登录按钮
+    bool login_clicked = false;
+    auto login_button = Button("登录", [&] { login_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", screen.ExitLoopClosure());
+    
+    // 组合所有组件
+    auto container = Container::Vertical({
+        username_input,
+        password_input,
+        Container::Horizontal({
+            login_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("学生登录") | bold | hcenter,
+            separator(),
+            vbox({
+                hbox(text(" 学号: "), username_input->Render()) | hcenter,
+                hbox(text(" 密码: "), password_input->Render()) | hcenter,
+                separator(),
+                hbox(login_button->Render(), back_button->Render()) | hcenter,
+            }) | border,
+        });
+    });
+
+    // 处理登录按钮点击事件
+    auto login_handler = CatchEvent(renderer, [&](Event event) {
+        if (login_clicked) {
+            // TODO: 实现真正的登录验证逻辑
+            std::cout << "学生尝试登录: " << username << std::endl;
+            login_clicked = false;
+            screen.ExitLoopClosure()();
+            return true;
+        }
+        return false;
+    });
+
+    screen.Loop(login_handler);
 }
-
 
 void printMenu() {
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
 
-
     // 创建登录按钮
     auto admin_button = Button("我是管理员", admin_login_page);
     auto student_button = Button("我是学生", student_login_page);
-
-
+    
     auto roleForm = Container::Horizontal({
         admin_button,
         student_button
