@@ -102,7 +102,7 @@ std::vector<User> User::loadFromFile(const std::string& filename) {
 std::vector<User> User::loadAllUsers() {
     std::vector<User> users;
     // Load users
-    std::vector<User> regularUsers = loadFromFile("users/user.json");
+    std::vector<User> regularUsers = loadFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/users/user.json");
     users.insert(users.end(), regularUsers.begin(), regularUsers.end());
     
     return users;
