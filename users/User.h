@@ -7,6 +7,8 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
+#include <fstream>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -40,6 +42,13 @@ public:
 
     json toJson() const;
     void fromJson(const json& j);
+    
+    // New static methods for user management
+    static std::vector<User> loadFromFile(const std::string& filename);
+    static std::vector<User> loadAllUsers();
+    static bool saveToFile(const std::vector<User>& users, const std::string& filename);
+    static User* authenticate(const std::string& username, const std::string& password);
+    static bool registerUser(const std::string& username, const std::string& password, Role role = STUDENT);
 };
 
 #endif //USER_H

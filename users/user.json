@@ -4,5 +4,65 @@
     "name": "admin",
     "password": "password",
     "role": "ADMIN"
+  },
+  {
+    "id": 2,
+    "name": "user1",
+    "password": "pass123",
+    "role": "STUDENT"
+  },
+  {
+    "id": 3,
+    "name": "user2",
+    "password": "pass234",
+    "role": "STUDENT"
+  },
+  {
+    "id": 4,
+    "name": "teacher1",
+    "password": "teacher123",
+    "role": "ADMIN"
+  },
+  {
+    "id": 5,
+    "name": "user3",
+    "password": "pass345",
+    "role": "STUDENT"
+  },
+  {
+    "id": 6,
+    "name": "user4",
+    "password": "pass456",
+    "role": "STUDENT"
+  },
+  {
+    "id": 7,
+    "name": "user5",
+    "password": "pass567",
+    "role": "STUDENT"
+  },
+  {
+    "id": 8,
+    "name": "teacher2",
+    "password": "teacher234",
+    "role": "ADMIN"
+  },
+  {
+    "id": 9,
+    "name": "user6",
+    "password": "pass678",
+    "role": "STUDENT"
+  },
+  {
+    "id": 10,
+    "name": "user7",
+    "password": "pass789",
+    "role": "STUDENT"
+  },
+  {
+    "id": 11,
+    "name": "user8",
+    "password": "pass890",
+    "role": "STUDENT"
   }
 ]
