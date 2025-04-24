@@ -66,6 +66,9 @@ public:
     
     // 图书管理方法
     static bool addBook(const book& newBook);
+    static bool deleteBook(int bookId);
+    static bool borrowBook(int bookId);
+    static bool returnBook(int bookId);
     static book* findBookById(int id);
     static bool updateBook(const book& updatedBook);
 };

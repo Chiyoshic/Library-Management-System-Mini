@@ -275,3 +275,94 @@ bool book::updateBook(const book& updatedBook) {
         return false;
     }
 }
+
+// 删除图书
+bool book::deleteBook(int bookId) {
+    // 加载所有图书
+    std::vector<book> allBooks = loadAllBooks();
+    bool found = false;
+    
+    // 创建一个新的图书集合，排除要删除的图书
+    std::vector<book> updatedBooks;
+    for (const auto& b : allBooks) {
+        if (b.bookId == bookId) {
+            found = true; // 找到要删除的图书
+        } else {
+            updatedBooks.push_back(b); // 保留其他图书
+        }
+    }
+    
+    // 如果找到图书并删除，保存更新后的图书集合
+    if (found) {
+        return saveToFile(updatedBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+    } else {
+        std::cerr << "图书不存在，无法删除 ID: " << bookId << std::endl;
+        return false;
+    }
+}
+
+// 借阅图书
+bool book::borrowBook(int bookId) {
+    // 加载所有图书
+    std::vector<book> allBooks = loadAllBooks();
+    bool found = false;
+    bool success = false;
+    
+    // 查找并更新图书状态
+    for (auto& b : allBooks) {
+        if (b.bookId == bookId) {
+            found = true;
+            if (b.isAvailable) {
+                b.isAvailable = false; // 设置为已借出
+                success = true;
+            } else {
+                std::cerr << "图书已被借出，无法再次借阅 ID: " << bookId << std::endl;
+            }
+            break;
+        }
+    }
+    
+    // 根据处理结果返回
+    if (!found) {
+        std::cerr << "图书不存在，无法借阅 ID: " << bookId << std::endl;
+        return false;
+    } else if (success) {
+        // 借阅成功，保存更新后的图书信息
+        return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+    } else {
+        return false; // 图书存在但已被借出
+    }
+}
+
+// 归还图书
+bool book::returnBook(int bookId) {
+    // 加载所有图书
+    std::vector<book> allBooks = loadAllBooks();
+    bool found = false;
+    bool success = false;
+    
+    // 查找并更新图书状态
+    for (auto& b : allBooks) {
+        if (b.bookId == bookId) {
+            found = true;
+            if (!b.isAvailable) {
+                b.isAvailable = true; // 设置为可借阅
+                success = true;
+            } else {
+                std::cerr << "图书已在库中，无需归还 ID: " << bookId << std::endl;
+            }
+            break;
+        }
+    }
+    
+    // 根据处理结果返回
+    if (!found) {
+        std::cerr << "图书不存在，无法归还 ID: " << bookId << std::endl;
+        return false;
+    } else if (success) {
+        // 归还成功，保存更新后的图书信息
+        return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+    } else {
+        return false; // 图书存在但已在库中
+    }
+}
