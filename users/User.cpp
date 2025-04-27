@@ -166,10 +166,9 @@ bool User::registerUser(const std::string& username, const std::string& password
     User newUser(maxId + 1, username, password, role);
     
     // 根据角色确定要更新的文件
-    std::string filename = (role == ADMIN) ? "users/admin.json" : "users/user.json";
-    std::vector<User> usersList = loadFromFile(filename);
+    std::vector<User> usersList = loadFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/users/user.json");
     usersList.push_back(newUser);
     
     // 将更新后的用户列表保存回文件
-    return saveToFile(usersList, filename);
+    return saveToFile(usersList, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/users/user.json");
 }

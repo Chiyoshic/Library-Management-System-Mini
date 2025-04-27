@@ -29,6 +29,7 @@ void printIndex() {
 void admin_dashboard_page(User* user);
 void student_dashboard_page(User* user);
 void manage_books_page(User* user);
+void student_register_page();
 
 void admin_login_page() {
     using namespace ftxui;
@@ -125,6 +126,12 @@ void student_login_page() {
     bool login_clicked = false;
     auto login_button = Button("登录", [&] { login_clicked = true; });
     
+    // 创建注册按钮
+    auto register_button = Button("注册", [&] {
+        screen.ExitLoopClosure()();
+        student_register_page();
+    });
+    
     // 创建返回按钮
     auto back_button = Button("返回", screen.ExitLoopClosure());
     
@@ -134,6 +141,7 @@ void student_login_page() {
         password_input,
         Container::Horizontal({
             login_button,
+            register_button,
             back_button
         })
     });
@@ -148,7 +156,7 @@ void student_login_page() {
                 hbox(text(" 密码: "), password_input->Render()) | hcenter,
                 show_error ? text(error_message) | color(Color::Red) | hcenter : text(""),
                 separator(),
-                hbox(login_button->Render(), back_button->Render()) | hcenter,
+                hbox(login_button->Render(), register_button->Render(), back_button->Render()) | hcenter,
             }) | border,
         });
     });
@@ -332,6 +340,112 @@ void student_dashboard_page(User* user) {
     });
     
     screen.Loop(renderer);
+}
+
+void student_register_page() {
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 创建账户和密码变量
+    std::string username;
+    std::string password;
+    std::string error_message;
+    bool show_error = false;
+    bool show_success = false;
+    
+    // 创建输入框，密码使用*号显示
+    InputOption password_option;
+    password_option.password = true;
+    
+    auto username_input = Input(&username, "请输入学号/用户名");
+    auto password_input = Input(&password, "请输入密码", password_option);
+    
+    // 创建确认按钮
+    bool register_clicked = false;
+    auto confirm_button = Button("确认注册", [&] { register_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        printMenu();
+    });
+    
+    // 组合所有组件
+    auto container = Container::Vertical({
+        username_input,
+        password_input,
+        Container::Horizontal({
+            confirm_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("注册一个学生账号") | bold | hcenter,
+            separator(),
+            vbox({
+                hbox(text(" 学号/用户名: "), username_input->Render()) | hcenter,
+                hbox(text(" 密码: "), password_input->Render()) | hcenter,
+                show_error ? text(error_message) | color(Color::Red) | hcenter : text(""),
+                show_success ? text("注册成功！") | color(Color::Green) | hcenter : text(""),
+                separator(),
+                hbox(confirm_button->Render(), back_button->Render()) | hcenter,
+            }) | border,
+        });
+    });
+
+    // 处理注册按钮点击事件
+    auto register_handler = CatchEvent(renderer, [&](Event event) {
+        if (register_clicked) {
+            register_clicked = false;
+            
+            // 基本输入验证
+            if (username.empty() || password.empty()) {
+                show_error = true;
+                show_success = false;
+                error_message = "用户名和密码不能为空";
+                return true;
+            }
+            
+            // 调用User::registerUser方法创建新用户
+            bool success = User::registerUser(username, password, User::STUDENT);
+            if (success) {
+                show_error = false;
+                show_success = true;
+                
+                // 短暂显示成功消息，然后返回主菜单
+                screen.PostEvent(Event::Custom);
+                return true;
+            } else {
+                show_error = true;
+                show_success = false;
+                error_message = "注册失败，用户名可能已存在";
+                return true;
+            }
+        }
+        
+        // 用于处理注册成功后的返回
+        if (event == Event::Custom && show_success) {
+            // 延迟一小段时间显示成功消息
+            static int delay_count = 0;
+            if (++delay_count > 2) {
+                delay_count = 0;
+                screen.ExitLoopClosure()();
+                printMenu();
+            }
+            // screen.ExitLoopClosure()();
+            // this_thread::sleep_for(chrono::seconds(3));
+            // printMenu();
+            // return true;
+        }
+        
+        return false;
+    });
+
+    screen.Loop(register_handler);
 }
 
 void printMenu() {

@@ -64,5 +64,11 @@
     "name": "user8",
     "password": "pass890",
     "role": "STUDENT"
+  },
+  {
+    "id": 12,
+    "name": "usagi",
+    "password": "usagi",
+    "role": "STUDENT"
   }
 ]
