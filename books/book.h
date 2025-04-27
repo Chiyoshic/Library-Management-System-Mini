@@ -14,7 +14,7 @@ using json = nlohmann::json;
 
 class book {
 public:
-    int bookId;
+    std::string bookId;
     std::string title;
     std::string author;
     enum type {

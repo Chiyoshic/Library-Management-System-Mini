@@ -27,9 +27,7 @@ public:
     
     // 借书记录构造函数（未归还）
     record(int borrowerID, int bookID, time_t borrowTime);
-    
-    // 完整构造函数
-    record(int borrowerID, int bookID, time_t borrowTime, time_t returnTime);
+
     
     // Getter方法
     int getBorrowerID() const;

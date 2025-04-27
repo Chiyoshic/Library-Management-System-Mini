@@ -5,6 +5,7 @@
 #include "record.h"
 #include <iomanip>
 #include <sstream>
+#include "nlohmann/json.hpp"
 
 // 默认构造函数
 record::record() : borrowerID(0), bookID(0), borrowTime(0), returnTime(0) {}
@@ -72,8 +73,7 @@ record record::fromJson(const json& j) {
     return record(
         j["borrowerID"].get<int>(),
         j["bookID"].get<int>(),
-        j["borrowTime"].get<time_t>(),
-        j["returnTime"].get<time_t>()
+        j["borrowTime"].get<time_t>()
     );
 }
 
