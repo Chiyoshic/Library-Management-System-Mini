@@ -28,6 +28,7 @@ void printIndex() {
 
 void admin_dashboard_page(User* user);
 void student_dashboard_page(User* user);
+void manage_books_page(User* user);
 
 void admin_login_page() {
     using namespace ftxui;
@@ -182,9 +183,9 @@ void admin_dashboard_page(User* user) {
     auto screen = ScreenInteractive::TerminalOutput();
     
     // 创建功能按钮
-    auto manage_books_button = Button("图书管理", [] {
-        // 图书管理功能待实现
-        std::cout << "进入图书管理页面" << std::endl;
+    auto manage_books_button = Button("图书管理", [&] {
+        screen.ExitLoopClosure()();
+        manage_books_page(user);
     });
     
     auto manage_users_button = Button("用户管理", [] {
@@ -197,12 +198,18 @@ void admin_dashboard_page(User* user) {
         std::cout << "查看统计信息" << std::endl;
     });
     
+    auto query_borrows_button = Button("查询借阅", [] {
+        // 查询借阅功能待实现
+        std::cout << "查询借阅信息" << std::endl;
+    });
+    
     auto logout_button = Button("退出登录", screen.ExitLoopClosure());
     
     auto container = Container::Vertical({
         manage_books_button,
         manage_users_button,
         view_stats_button,
+        query_borrows_button,
         logout_button
     });
     
@@ -216,8 +223,61 @@ void admin_dashboard_page(User* user) {
                 manage_books_button->Render(),
                 manage_users_button->Render(),
                 view_stats_button->Render(),
+                query_borrows_button->Render(),
                 separator(),
                 logout_button->Render(),
+            }) | border,
+        });
+    });
+    
+    screen.Loop(renderer);
+}
+
+void manage_books_page(User* user) {
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+    
+    // 创建图书管理功能按钮
+    auto search_books_button = Button("查询图书", [] {
+        // 查询图书功能待实现
+        std::cout << "进入查询图书页面" << std::endl;
+    });
+    
+    auto add_books_button = Button("录入图书", [] {
+        // 录入图书功能待实现
+        std::cout << "进入录入图书页面" << std::endl;
+    });
+    
+    auto delete_books_button = Button("删除图书", [] {
+        // 删除图书功能待实现
+        std::cout << "进入删除图书页面" << std::endl;
+    });
+    
+    auto back_button = Button("返回上一页", [&] {
+        screen.ExitLoopClosure()();
+        admin_dashboard_page(user);
+    });
+    
+    auto container = Container::Vertical({
+        search_books_button,
+        add_books_button,
+        delete_books_button,
+        back_button
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("图书管理") | bold | hcenter,
+            text("管理员: " + user->getName()) | hcenter,
+            separator(),
+            vbox({
+                search_books_button->Render(),
+                add_books_button->Render(),
+                delete_books_button->Render(),
+                separator(),
+                back_button->Render(),
             }) | border,
         });
     });
