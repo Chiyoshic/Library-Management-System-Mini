@@ -8,6 +8,7 @@
 #include "pages/Pages.h"
 #include <thread>
 #include <chrono>
+#include <book.h>
 using namespace std;
 using json = nlohmann::json;
 

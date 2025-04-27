@@ -181,7 +181,7 @@ std::vector<book> book::loadFromFile(const std::string& filename) {
 // 加载所有图书
 std::vector<book> book::loadAllBooks() {
     // 从默认路径加载图书
-    return loadFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+    return loadFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
 }
 
 // 将图书数据保存到文件

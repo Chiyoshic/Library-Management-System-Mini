@@ -1,6 +1,6 @@
 [
   {
-    "bookId": 1,
+    "bookId": "1",
     "title": "The Great Gatsby",
     "author": "F. Scott Fitzgerald",
     "bookType": "FICTION",
@@ -9,7 +9,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 2,
+    "bookId": "2",
     "title": "To Kill a Mockingbird",
     "author": "Harper Lee",
     "bookType": "FICTION",
@@ -18,7 +18,7 @@
     "isAvailable": false
   },
   {
-    "bookId": 3,
+    "bookId": "3",
     "title": "A Brief History of Time",
     "author": "Stephen Hawking",
     "bookType": "SCIENCE",
@@ -27,7 +27,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 4,
+    "bookId": "4",
     "title": "The Second World War",
     "author": "Winston Churchill",
     "bookType": "HISTORY",
@@ -36,7 +36,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 5,
+    "bookId": "5",
     "title": "Steve Jobs",
     "author": "Walter Isaacson",
     "bookType": "BIOGRAPHY",
@@ -45,7 +45,7 @@
     "isAvailable": false
   },
   {
-    "bookId": 6,
+    "bookId": "6",
     "title": "Harry Potter and the Sorcerer's Stone",
     "author": "J.K. Rowling",
     "bookType": "FANTASY",
@@ -54,7 +54,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 7,
+    "bookId": "7",
     "title": "The Da Vinci Code",
     "author": "Dan Brown",
     "bookType": "MYSTERY",
@@ -63,7 +63,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 8,
+    "bookId": "8",
     "title": "Pride and Prejudice",
     "author": "Jane Austen",
     "bookType": "ROMANCE",
@@ -72,7 +72,7 @@
     "isAvailable": false
   },
   {
-    "bookId": 9,
+    "bookId": "9",
     "title": "Sapiens: A Brief History of Humankind",
     "author": "Yuval Noah Harari",
     "bookType": "NON_FICTION",
@@ -81,7 +81,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 10,
+    "bookId": "10",
     "title": "The Alchemist",
     "author": "Paulo Coelho",
     "bookType": "FICTION",
@@ -90,7 +90,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 11,
+    "bookId": "11",
     "title": "A Game of Thrones",
     "author": "George R.R. Martin",
     "bookType": "FANTASY",
@@ -99,7 +99,7 @@
     "isAvailable": false
   },
   {
-    "bookId": 12,
+    "bookId": "12",
     "title": "The Origin of Species",
     "author": "Charles Darwin",
     "bookType": "SCIENCE",
@@ -108,7 +108,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 13,
+    "bookId": "13",
     "title": "Gone Girl",
     "author": "Gillian Flynn",
     "bookType": "MYSTERY",
@@ -117,7 +117,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 14,
+    "bookId": "14",
     "title": "Becoming",
     "author": "Michelle Obama",
     "bookType": "BIOGRAPHY",
@@ -126,7 +126,7 @@
     "isAvailable": false
   },
   {
-    "bookId": 15,
+    "bookId": "15",
     "title": "The Immortal Life of Henrietta Lacks",
     "author": "Rebecca Skloot",
     "bookType": "NON_FICTION",
@@ -135,7 +135,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 16,
+    "bookId": "16",
     "title": "The Shining",
     "author": "Stephen King",
     "bookType": "FICTION",
@@ -144,7 +144,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 17,
+    "bookId": "17",
     "title": "The Guns of August",
     "author": "Barbara W. Tuchman",
     "bookType": "HISTORY",
@@ -153,7 +153,7 @@
     "isAvailable": false
   },
   {
-    "bookId": 18,
+    "bookId": "18",
     "title": "The Selfish Gene",
     "author": "Richard Dawkins",
     "bookType": "SCIENCE",
@@ -162,7 +162,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 19,
+    "bookId": "19",
     "title": "Outlander",
     "author": "Diana Gabaldon",
     "bookType": "ROMANCE",
@@ -171,7 +171,7 @@
     "isAvailable": true
   },
   {
-    "bookId": 20,
+    "bookId": "20",
     "title": "Einstein: His Life and Universe",
     "author": "Walter Isaacson",
     "bookType": "BIOGRAPHY",

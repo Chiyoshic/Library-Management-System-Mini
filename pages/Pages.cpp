@@ -7,10 +7,20 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
+#include <book.h>
+#include <vector>
+#include <algorithm>
+class book;
 using namespace std;
 
+// 清屏函数
+void clearScreen() {
+    system("clear");  // 在Unix/Linux/macOS系统上
+    // 如果在Windows系统上，可以使用system("cls");
+}
+
 void printIndex() {
-    system("clear");
+    clearScreen();
     std::cout << " __          __  _                            _        " << std::endl;
     std::cout << " \\ \\        / / | |                          | |       " << std::endl;
     std::cout << "  \\ \\  /\\  / /__| | ___ ___  _ __ ___   ___  | |_ ___  " << std::endl;
@@ -32,6 +42,7 @@ void manage_books_page(User* user);
 void student_register_page();
 
 void admin_login_page() {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
@@ -90,6 +101,7 @@ void admin_login_page() {
             if (user && user->getRole() == User::ADMIN) {
                 show_error = false;
                 screen.ExitLoopClosure()();
+                clearScreen();
                 admin_dashboard_page(user);
                 return true;
             } else {
@@ -105,6 +117,7 @@ void admin_login_page() {
 }
 
 void student_login_page() {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
@@ -171,6 +184,7 @@ void student_login_page() {
             if (user && user->getRole() == User::STUDENT) {
                 show_error = false;
                 screen.ExitLoopClosure()();
+                clearScreen();
                 student_dashboard_page(user);
                 return true;
             } else {
@@ -186,6 +200,7 @@ void student_login_page() {
 }
 
 void admin_dashboard_page(User* user) {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
@@ -193,6 +208,7 @@ void admin_dashboard_page(User* user) {
     // 创建功能按钮
     auto manage_books_button = Button("图书管理", [&] {
         screen.ExitLoopClosure()();
+        clearScreen();
         manage_books_page(user);
     });
     
@@ -242,14 +258,17 @@ void admin_dashboard_page(User* user) {
 }
 
 void manage_books_page(User* user) {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
     
     // 创建图书管理功能按钮
-    auto search_books_button = Button("查询图书", [] {
-        // 查询图书功能待实现
-        std::cout << "进入查询图书页面" << std::endl;
+    auto search_books_button = Button("查询图书", [&] {
+        // 调用图书搜索页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        search_books_page(user);
     });
     
     auto add_books_button = Button("录入图书", [] {
@@ -264,6 +283,7 @@ void manage_books_page(User* user) {
     
     auto back_button = Button("返回上一页", [&] {
         screen.ExitLoopClosure()();
+        clearScreen();
         admin_dashboard_page(user);
     });
     
@@ -294,14 +314,17 @@ void manage_books_page(User* user) {
 }
 
 void student_dashboard_page(User* user) {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
     
     // 创建功能按钮
-    auto search_books_button = Button("搜索图书", [] {
-        // 搜索图书功能待实现
-        std::cout << "进入图书搜索页面" << std::endl;
+    auto search_books_button = Button("搜索图书", [&] {
+        // 调用图书搜索页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        search_books_page(user);
     });
     
     auto my_borrows_button = Button("我的借阅", [] {
@@ -343,6 +366,7 @@ void student_dashboard_page(User* user) {
 }
 
 void student_register_page() {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
@@ -368,6 +392,7 @@ void student_register_page() {
     // 创建返回按钮
     auto back_button = Button("返回", [&] {
         screen.ExitLoopClosure()();
+        clearScreen();
         printMenu();
     });
     
@@ -439,11 +464,13 @@ void student_register_page() {
     
     // 如果是因为注册成功而退出的，则返回主菜单
     if (show_success) {
+        clearScreen();
         printMenu();
     }
 }
 
 void printMenu() {
+    clearScreen();
     using namespace ftxui;
 
     auto screen = ScreenInteractive::TerminalOutput();
@@ -473,4 +500,235 @@ void printMenu() {
     // 启动交互循环
     screen.Loop(renderer);
 
+}
+
+// 图书搜索页面
+void search_books_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+    
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 加载所有图书
+    std::vector<book> all_books = book::loadAllBooks();
+    std::vector<book> search_results;
+    
+    // 搜索条件
+    std::string search_id;
+    std::string search_title;
+    bool has_searched = false;
+    
+    // 当前选中的图书索引
+    int selected_book_index = 0;
+    std::vector<std::string> books_entries;
+    
+    // 创建图书项目的显示项
+    auto createBookEntry = [](const book& b) -> std::string {
+        // 将书籍类型转换为字符串
+        std::string typeStr;
+        switch(b.getBookType()) {
+            case book::FICTION: typeStr = "小说"; break;
+            case book::NON_FICTION: typeStr = "非小说"; break;
+            case book::SCIENCE: typeStr = "科学"; break;
+            case book::HISTORY: typeStr = "历史"; break;
+            case book::BIOGRAPHY: typeStr = "传记"; break;
+            case book::FANTASY: typeStr = "奇幻"; break;
+            case book::MYSTERY: typeStr = "悬疑"; break;
+            case book::ROMANCE: typeStr = "爱情"; break;
+            default: typeStr = "未知"; break;
+        }
+        
+        // 固定宽度以防止溢出
+        const int id_width = 8;
+        const int title_width = 20;
+        const int author_width = 15;
+        const int type_width = 12;
+        const int publisher_width = 15;
+        const int isbn_width = 15;
+        
+        // 截断过长的字符串并确保填充宽度不为负数
+        std::string id = b.getBookId().substr(0, id_width);
+        std::string title = b.getTitle().substr(0, title_width);
+        std::string author = b.getAuthor().substr(0, author_width);
+        typeStr = typeStr.substr(0, type_width);
+        std::string publisher = b.getPublisher().substr(0, publisher_width);
+        std::string isbn = b.getIsbn().substr(0, isbn_width);
+        
+        // 添加空格填充至固定宽度
+        int id_padding = std::max(0, id_width - (int)id.length());
+        int title_padding = std::max(0, title_width - (int)title.length());
+        int author_padding = std::max(0, author_width - (int)author.length());
+        int type_padding = std::max(0, type_width - (int)typeStr.length());
+        int publisher_padding = std::max(0, publisher_width - (int)publisher.length());
+        int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
+        
+        // 创建格式化的条目字符串
+        std::string entry = 
+            id + std::string(id_padding, ' ') + " | " +
+            title + std::string(title_padding, ' ') + " | " +
+            author + std::string(author_padding, ' ') + " | " +
+            typeStr + std::string(type_padding, ' ') + " | " +
+            publisher + std::string(publisher_padding, ' ') + " | " +
+            isbn + std::string(isbn_padding, ' ') + " | " +
+            (b.getIsAvailable() ? "可借阅" : "已借出");
+            
+        return entry;
+    };
+    
+    // 为所有图书生成条目
+    for (const auto& b : all_books) {
+        books_entries.push_back(createBookEntry(b));
+    }
+    
+    // 创建菜单组件，用于显示和选择图书
+    int books_menu_selected = 0;
+    
+    // 创建图书菜单组件 - 不使用自定义样式选项
+    auto books_menu = Menu(&books_entries, &books_menu_selected);
+    
+    // 搜索结果相关
+    std::vector<std::string> search_entries;
+    int search_menu_selected = 0;
+    auto search_menu = Menu(&search_entries, &search_menu_selected);
+    
+    // 创建输入框
+    auto id_input = Input(&search_id, "输入图书ID搜索");
+    auto title_input = Input(&search_title, "输入图书标题搜索");
+    
+    // 创建搜索按钮
+    bool search_clicked = false;
+    auto search_button = Button("搜索", [&] { search_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        // 根据用户角色决定返回到哪个页面
+        if (user->getRole() == User::ADMIN) {
+            manage_books_page(user);
+        } else {
+            student_dashboard_page(user);
+        }
+    });
+    
+    // 搜索框和按钮区域
+    auto search_container = Container::Vertical({
+        Container::Horizontal({
+            id_input,
+            title_input,
+            search_button
+        }),
+        back_button
+    });
+    
+    // 主容器
+    auto container = Container::Vertical({
+        search_container,
+        books_menu,
+        search_menu
+    });
+    
+    // 渲染器
+    auto renderer = Renderer(container, [&] {
+        // 表头
+        Element header = hbox({
+            text("ID") | size(WIDTH, EQUAL, 8),
+            text(" | "),
+            text("标题") | size(WIDTH, EQUAL, 20),
+            text(" | "),
+            text("作者") | size(WIDTH, EQUAL, 15),
+            text(" | "),
+            text("类型") | size(WIDTH, EQUAL, 12),
+            text(" | "),
+            text("出版社") | size(WIDTH, EQUAL, 15),
+            text(" | "),
+            text("ISBN") | size(WIDTH, EQUAL, 15),
+            text(" | "),
+            text("状态") | size(WIDTH, EQUAL, 8)
+        }) | bold;
+        
+        // 修改渲染以处理菜单项的样式
+        return vbox({
+            // 页面标题
+            text("图书查询") | bold | hcenter,
+            text("用户: " + user->getName()) | hcenter,
+            separator(),
+            
+            // 上半部分：所有图书列表（使用Menu组件）
+            vbox({
+                text("所有图书") | bold | hcenter,
+                header,
+                separator(),
+                // 在这里直接对Menu渲染结果应用样式
+                books_menu->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 10)
+            }) | border,
+            
+            // 下半部分：搜索区域
+            vbox({
+                // 搜索控件
+                hbox({
+                    vbox({
+                        text("按ID搜索:"),
+                        id_input->Render()
+                    }),
+                    vbox({
+                        text("按标题搜索:"),
+                        title_input->Render()
+                    }),
+                    vbox({
+                        text(" "),
+                        search_button->Render()
+                    })
+                }),
+                
+                // 搜索结果
+                has_searched ? vbox({
+                    text("搜索结果") | bold | hcenter,
+                    header,
+                    separator(),
+                    search_entries.empty() 
+                        ? text("没有找到图书") | hcenter 
+                        : search_menu->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 6)
+                }) : text(""),
+                
+                // 返回按钮
+                back_button->Render() | hcenter
+            }) | border
+        });
+    });
+    
+    // 搜索逻辑处理
+    auto search_handler = CatchEvent(renderer, [&](Event event) {
+        if (search_clicked) {
+            search_clicked = false;
+            has_searched = true;
+            search_results.clear();
+            search_entries.clear();
+            
+            // 根据输入的ID或标题搜索图书
+            for (const auto& b : all_books) {
+                // ID搜索（精确匹配）
+                if (!search_id.empty() && b.getBookId() == search_id) {
+                    search_results.push_back(b);
+                    search_entries.push_back(createBookEntry(b));
+                    continue;
+                }
+                
+                // 标题搜索（模糊匹配）
+                if (!search_title.empty() && 
+                    b.getTitle().find(search_title) != std::string::npos) {
+                    search_results.push_back(b);
+                    search_entries.push_back(createBookEntry(b));
+                }
+            }
+            
+            // 重置搜索菜单选择
+            search_menu_selected = 0;
+            
+            return true;
+        }
+        return false;
+    });
+    
+    screen.Loop(search_handler);
 }
