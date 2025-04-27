@@ -416,8 +416,12 @@ void student_register_page() {
                 show_error = false;
                 show_success = true;
                 
-                // 短暂显示成功消息，然后返回主菜单
-                screen.PostEvent(Event::Custom);
+                // 显示注册成功，并在短暂延迟后自动返回主菜单
+                std::thread([&screen]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                    screen.ExitLoopClosure()();
+                }).detach();
+                
                 return true;
             } else {
                 show_error = true;
@@ -427,25 +431,16 @@ void student_register_page() {
             }
         }
         
-        // 用于处理注册成功后的返回
-        if (event == Event::Custom && show_success) {
-            // 延迟一小段时间显示成功消息
-            static int delay_count = 0;
-            if (++delay_count > 2) {
-                delay_count = 0;
-                screen.ExitLoopClosure()();
-                printMenu();
-            }
-            // screen.ExitLoopClosure()();
-            // this_thread::sleep_for(chrono::seconds(3));
-            // printMenu();
-            // return true;
-        }
-        
         return false;
     });
 
+    // 注册成功后会调用ExitLoopClosure退出当前页面
     screen.Loop(register_handler);
+    
+    // 如果是因为注册成功而退出的，则返回主菜单
+    if (show_success) {
+        printMenu();
+    }
 }
 
 void printMenu() {
