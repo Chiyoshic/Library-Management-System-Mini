@@ -621,15 +621,20 @@ void search_books_page(User* user) {
         back_button
     });
     
-    // 主容器
-    auto container = Container::Vertical({
-        search_container,
+    // TAB导航相关 - 添加焦点控制变量
+    bool books_area_focused = true;
+    
+    // 使用合适的布局容器
+    auto main_container = Container::Vertical({
         books_menu,
-        search_menu
+        Container::Vertical({
+            search_container,
+            search_menu
+        })
     });
     
     // 渲染器
-    auto renderer = Renderer(container, [&] {
+    auto renderer = Renderer(main_container, [&] {
         // 表头
         Element header = hbox({
             text("ID") | size(WIDTH, EQUAL, 8),
@@ -647,6 +652,10 @@ void search_books_page(User* user) {
             text("状态") | size(WIDTH, EQUAL, 8)
         }) | bold;
         
+        // 根据焦点状态选择不同的边框风格和文本
+        std::string books_title = books_area_focused ? "所有图书 [已选中]" : "所有图书";
+        std::string search_title = !books_area_focused ? "搜索区域 [已选中]" : "搜索区域";
+        
         // 修改渲染以处理菜单项的样式
         return vbox({
             // 页面标题
@@ -656,16 +665,17 @@ void search_books_page(User* user) {
             
             // 上半部分：所有图书列表（使用Menu组件）
             vbox({
-                text("所有图书") | bold | hcenter,
+                text(books_title) | bold | hcenter,
                 header,
                 separator(),
                 // 在这里直接对Menu渲染结果应用样式
                 books_menu->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 10)
-            }) | border,
+            }),
             
             // 下半部分：搜索区域
             vbox({
                 // 搜索控件
+                text(search_title) | bold | hcenter,
                 hbox({
                     vbox({
                         text("按ID搜索:"),
@@ -693,12 +703,29 @@ void search_books_page(User* user) {
                 
                 // 返回按钮
                 back_button->Render() | hcenter
-            }) | border
+            }),
         });
     });
     
-    // 搜索逻辑处理
-    auto search_handler = CatchEvent(renderer, [&](Event event) {
+    // 事件处理
+    auto event_handler = CatchEvent(renderer, [&](Event event) {
+        // 处理TAB键 - 在书籍区域和搜索区域之间切换
+        if (event == Event::Tab) {
+            books_area_focused = !books_area_focused;
+            
+            // 根据当前焦点区域设置输入焦点到相应组件
+            if (books_area_focused) {
+                main_container->TakeFocus();
+                books_menu->TakeFocus();
+            } else {
+                search_container->TakeFocus();
+                id_input->TakeFocus();
+            }
+            
+            return true;
+        }
+        
+        // 处理搜索按钮点击
         if (search_clicked) {
             search_clicked = false;
             has_searched = true;
@@ -725,10 +752,18 @@ void search_books_page(User* user) {
             // 重置搜索菜单选择
             search_menu_selected = 0;
             
+            // 如果有搜索结果，自动切换到搜索结果区域
+            if (!search_entries.empty()) {
+                books_area_focused = false;
+                search_menu->TakeFocus();
+            }
+            
             return true;
         }
+        
         return false;
     });
     
-    screen.Loop(search_handler);
+    // 使用屏幕的 Loop 方法运行界面
+    screen.Loop(event_handler);
 }
