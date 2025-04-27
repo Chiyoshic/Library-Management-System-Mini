@@ -10,18 +10,18 @@
 using json = nlohmann::json;
 
 // 默认构造函数
-book::book() : bookId(0), title(""), author(""), bookType(FICTION), 
+book::book() : bookId(""), title(""), author(""), bookType(FICTION), 
                publisher(""), isbn(""), isAvailable(true) {}
 
 // 带参数的构造函数 (含有所有参数的构造函数)
-book::book(int id, const std::string& title, const std::string& author, 
+book::book(const std::string& id, const std::string& title, const std::string& author, 
            type bookType, const std::string& publisher, const std::string& isbn, 
            bool isAvailable) 
     : bookId(id), title(title), author(author), bookType(bookType), 
       publisher(publisher), isbn(isbn), isAvailable(isAvailable) {}
 
 // Getter 方法
-int book::getBookId() const {
+std::string book::getBookId() const {
     return bookId;
 }
 
@@ -50,7 +50,7 @@ bool book::getIsAvailable() const {
 }
 
 // Setter 方法
-void book::setBookId(int id) {
+void book::setBookId(const std::string& id) {
     this->bookId = id;
 }
 
@@ -121,23 +121,7 @@ json book::toJson() const {
 
 // 从JSON对象中加载图书信息 (反序列化)
 void book::fromJson(const json& j) {
-    // 处理bookId转换 - 判断是否为数字类型
-    if (j.at("bookId").is_number()) {
-        bookId = j.at("bookId").get<int>();
-    } else {
-        // 如果是字符串，尝试提取数字部分
-        std::string idStr = j.at("bookId").get<std::string>();
-        // 移除非数字字符，只保留数字部分
-        std::string numericPart = "";
-        for (char c : idStr) {
-            if (std::isdigit(c)) {
-                numericPart += c;
-            }
-        }
-        // 转换为整数，如果为空则设置为0
-        bookId = numericPart.empty() ? 0 : std::stoi(numericPart);
-    }
-    
+    bookId = j.at("bookId").get<std::string>();
     title = j.at("title").get<std::string>();
     author = j.at("author").get<std::string>();
     publisher = j.at("publisher").get<std::string>();
@@ -241,7 +225,7 @@ bool book::addBook(const book& newBook) {
 }
 
 // 根据ID查找图书
-book* book::findBookById(int id) {
+book* book::findBookById(const std::string& id) {
     static book foundBook;
     std::vector<book> allBooks = loadAllBooks();
     
@@ -273,96 +257,5 @@ bool book::updateBook(const book& updatedBook) {
     } else {
         std::cerr << "Book not found" << std::endl;
         return false;
-    }
-}
-
-// 删除图书
-bool book::deleteBook(int bookId) {
-    // 加载所有图书
-    std::vector<book> allBooks = loadAllBooks();
-    bool found = false;
-    
-    // 创建一个新的图书集合，排除要删除的图书
-    std::vector<book> updatedBooks;
-    for (const auto& b : allBooks) {
-        if (b.bookId == bookId) {
-            found = true; // 找到要删除的图书
-        } else {
-            updatedBooks.push_back(b); // 保留其他图书
-        }
-    }
-    
-    // 如果找到图书并删除，保存更新后的图书集合
-    if (found) {
-        return saveToFile(updatedBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
-    } else {
-        std::cerr << "图书不存在，无法删除 ID: " << bookId << std::endl;
-        return false;
-    }
-}
-
-// 借阅图书
-bool book::borrowBook(int bookId) {
-    // 加载所有图书
-    std::vector<book> allBooks = loadAllBooks();
-    bool found = false;
-    bool success = false;
-    
-    // 查找并更新图书状态
-    for (auto& b : allBooks) {
-        if (b.bookId == bookId) {
-            found = true;
-            if (b.isAvailable) {
-                b.isAvailable = false; // 设置为已借出
-                success = true;
-            } else {
-                std::cerr << "图书已被借出，无法再次借阅 ID: " << bookId << std::endl;
-            }
-            break;
-        }
-    }
-    
-    // 根据处理结果返回
-    if (!found) {
-        std::cerr << "图书不存在，无法借阅 ID: " << bookId << std::endl;
-        return false;
-    } else if (success) {
-        // 借阅成功，保存更新后的图书信息
-        return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
-    } else {
-        return false; // 图书存在但已被借出
-    }
-}
-
-// 归还图书
-bool book::returnBook(int bookId) {
-    // 加载所有图书
-    std::vector<book> allBooks = loadAllBooks();
-    bool found = false;
-    bool success = false;
-    
-    // 查找并更新图书状态
-    for (auto& b : allBooks) {
-        if (b.bookId == bookId) {
-            found = true;
-            if (!b.isAvailable) {
-                b.isAvailable = true; // 设置为可借阅
-                success = true;
-            } else {
-                std::cerr << "图书已在库中，无需归还 ID: " << bookId << std::endl;
-            }
-            break;
-        }
-    }
-    
-    // 根据处理结果返回
-    if (!found) {
-        std::cerr << "图书不存在，无法归还 ID: " << bookId << std::endl;
-        return false;
-    } else if (success) {
-        // 归还成功，保存更新后的图书信息
-        return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
-    } else {
-        return false; // 图书存在但已在库中
     }
 }

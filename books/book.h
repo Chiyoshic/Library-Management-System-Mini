@@ -33,12 +33,12 @@ public:
     
     // 构造函数
     book();
-    book(int id, const std::string& title, const std::string& author, 
+    book(const std::string& id, const std::string& title, const std::string& author, 
          type bookType, const std::string& publisher, const std::string& isbn, 
          bool isAvailable);
     
     // Getter 方法
-    int getBookId() const;
+    std::string getBookId() const;
     std::string getTitle() const;
     std::string getAuthor() const;
     type getBookType() const;
@@ -47,7 +47,7 @@ public:
     bool getIsAvailable() const;
     
     // Setter 方法
-    void setBookId(int id);
+    void setBookId(const std::string& id);
     void setTitle(const std::string& title);
     void setAuthor(const std::string& author);
     void setBookType(type bookType);
@@ -66,10 +66,7 @@ public:
     
     // 图书管理方法
     static bool addBook(const book& newBook);
-    static bool deleteBook(int bookId);
-    static bool borrowBook(int bookId);
-    static bool returnBook(int bookId);
-    static book* findBookById(int id);
+    static book* findBookById(const std::string& id);
     static bool updateBook(const book& updatedBook);
 };
 

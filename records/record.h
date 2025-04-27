@@ -7,20 +7,86 @@
 
 #include <iostream>
 #include <ctime>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 class record {
 private:
     int borrowerID;
     int bookID;
     time_t borrowTime;
-    time_t returnTime;
+    time_t returnTime; // 如果是0，表示尚未归还
 
 public:
-    record(int borrowerID, int bookID, time_t borrowTime, time_t returnTime) :
-        borrowerID(borrowerID),
-        bookID(bookID),
-        borrowTime(borrowTime),
-        returnTime(returnTime) {}
+    // 默认构造函数
+    record();
+    
+    // 借书记录构造函数（未归还）
+    record(int borrowerID, int bookID, time_t borrowTime);
+    
+    // 完整构造函数
+    record(int borrowerID, int bookID, time_t borrowTime, time_t returnTime);
+    
+    // Getter方法
+    int getBorrowerID() const;
+    int getBookID() const;
+    time_t getBorrowTime() const;
+    time_t getReturnTime() const;
+    
+    // Setter方法
+    void setBorrowerID(int id);
+    void setBookID(int id);
+    void setBorrowTime(time_t time);
+    void setReturnTime(time_t time);
+    
+    // 判断是否已归还
+    bool isReturned() const;
+    
+    // 设置归还时间（用于归还图书）
+    void returnBook();
+    
+    // JSON序列化
+    json toJson() const;
+    
+    // JSON反序列化
+    static record fromJson(const json& j);
+    
+    // 从JSON文件读取所有记录
+    static std::vector<record> readFromFile(const std::string& filename);
+    
+    // 将所有记录写入JSON文件
+    static void writeToFile(const std::vector<record>& records, const std::string& filename);
+    
+    // 添加借阅记录并保存到文件
+    static void addBorrowRecord(int borrowerID, int bookID, const std::string& filename);
+    
+    // 添加归还记录并保存到文件
+    static bool addReturnRecord(int borrowerID, int bookID, const std::string& filename);
+    
+    // 获取用户的所有借阅记录
+    static std::vector<record> getUserRecords(int userID, const std::vector<record>& records);
+    
+    // 获取图书的所有借阅记录
+    static std::vector<record> getBookRecords(int bookID, const std::vector<record>& records);
+    
+    // 获取当前未归还的记录
+    static std::vector<record> getUnreturnedRecords(const std::vector<record>& records);
+    
+    // 检查图书是否已被借出
+    static bool isBookBorrowed(int bookID, const std::vector<record>& records);
+    
+    // 检查用户是否已借此书
+    static bool hasUserBorrowedBook(int userID, int bookID, const std::vector<record>& records);
+    
+    // 格式化显示时间
+    static std::string formatTime(time_t time);
+    
+    // 打印记录信息
+    void printRecord() const;
 };
 
 #endif //RECORD_H
