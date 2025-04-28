@@ -435,9 +435,11 @@ void manage_books_page(User* user) {
         add_book_page(user);
     });
     
-    auto delete_books_button = Button("删除图书", [] {
-        // 删除图书功能待实现
-        std::cout << "进入删除图书页面" << std::endl;
+    auto delete_books_button = Button("删除图书", [&] {
+        // 调用图书删除页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        delete_book_page(user);
     });
     
     auto back_button = Button("返回上一页", [&] {
@@ -925,4 +927,129 @@ void search_books_page(User* user) {
     
     // 使用屏幕的 Loop 方法运行界面
     screen.Loop(event_handler);
+}
+
+// 添加删除图书页面
+void delete_book_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 图书ID变量
+    std::string book_id;
+    std::string error_message;
+    bool show_error = false;
+    bool show_success = false;
+    
+    // 创建输入框
+    auto id_input = Input(&book_id, "请输入要删除的图书ID") | size(WIDTH, EQUAL, 30);
+    
+    // 创建删除按钮
+    bool delete_clicked = false;
+    auto delete_button = Button("删除", [&] { delete_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        manage_books_page(user);
+    });
+    
+    // 主容器
+    auto container = Container::Vertical({
+        id_input,
+        Container::Horizontal({
+            delete_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("删除图书") | bold | hcenter,
+            separator(),
+            vbox({
+                hbox(text(" 图书ID: "), id_input->Render()) | hcenter,
+                show_error ? text(error_message) | color(Color::Red) | hcenter : text(""),
+                show_success ? text("图书删除成功！") | color(Color::Green) | hcenter : text(""),
+                separator(),
+                hbox(delete_button->Render(), back_button->Render()) | hcenter,
+            }) | border,
+        });
+    });
+
+    // 事件处理
+    auto event_handler = CatchEvent(renderer, [&](Event event) {
+        // 处理删除按钮点击
+        if (delete_clicked) {
+            delete_clicked = false;
+            
+            // 基本输入验证
+            if (book_id.empty()) {
+                show_error = true;
+                error_message = "图书ID不能为空";
+                return true;
+            }
+            
+            // 查找图书是否存在
+            book* bookToDelete = book::findBookById(book_id);
+            if (!bookToDelete) {
+                show_error = true;
+                error_message = "未找到ID为 " + book_id + " 的图书";
+                return true;
+            }
+            
+            // 直接删除图书，无需确认
+            // 读取所有图书
+            std::vector<book> allBooks = book::loadAllBooks();
+            bool found = false;
+            
+            // 找到并删除指定ID的图书
+            for (auto it = allBooks.begin(); it != allBooks.end(); ++it) {
+                if (it->getBookId() == book_id) {
+                    allBooks.erase(it);
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (found) {
+                // 保存更新后的图书列表
+                bool success = book::saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+                
+                if (success) {
+                    show_success = true;
+                    show_error = false;
+                    book_id.clear(); // 清空输入框，方便继续删除
+                    
+                    // 显示成功消息，并在短暂延迟后自动返回
+                    std::thread([&screen]() {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                        screen.ExitLoopClosure()();
+                    }).detach();
+                } else {
+                    show_error = true;
+                    error_message = "保存文件时出错";
+                }
+            } else {
+                show_error = true;
+                error_message = "删除图书失败";
+            }
+            
+            return true;
+        }
+        
+        return false;
+    });
+
+    // 启动交互循环
+    screen.Loop(event_handler);
+    
+    // 如果是因为删除成功而退出的，则返回图书管理页面
+    if (show_success) {
+        clearScreen();
+        manage_books_page(user);
+    }
 }

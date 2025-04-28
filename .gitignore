@@ -29,4 +29,5 @@
 # Executables
 *.exe
 *.out
+cmake-build-debug/
 *.app

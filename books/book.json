@@ -178,5 +178,14 @@
     "publisher": "Simon & Schuster",
     "isbn": "9780743264747",
     "isAvailable": false
+  },
+  {
+    "bookId": "21",
+    "title": "Einstein: His Life and Universe",
+    "author": "Walter Isaacson",
+    "bookType": "BIOGRAPHY",
+    "publisher": "Simon & Schuster",
+    "isbn": "9780743264747",
+    "isAvailable": false
   }
 ]
