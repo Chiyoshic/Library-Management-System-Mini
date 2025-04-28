@@ -1,191 +1,191 @@
 [
   {
-    "bookId": "1",
-    "title": "The Great Gatsby",
     "author": "F. Scott Fitzgerald",
+    "bookId": "1",
     "bookType": "FICTION",
-    "publisher": "Scribner",
+    "isAvailable": true,
     "isbn": "9780743273565",
-    "isAvailable": true
+    "publisher": "Scribner",
+    "title": "The Great Gatsby"
   },
   {
-    "bookId": "2",
-    "title": "To Kill a Mockingbird",
     "author": "Harper Lee",
+    "bookId": "2",
     "bookType": "FICTION",
-    "publisher": "HarperCollins",
+    "isAvailable": false,
     "isbn": "9780060935467",
-    "isAvailable": false
+    "publisher": "HarperCollins",
+    "title": "To Kill a Mockingbird"
   },
   {
-    "bookId": "3",
-    "title": "A Brief History of Time",
     "author": "Stephen Hawking",
+    "bookId": "3",
     "bookType": "SCIENCE",
-    "publisher": "Bantam Books",
+    "isAvailable": true,
     "isbn": "9780553380163",
-    "isAvailable": true
-  },
-  {
-    "bookId": "4",
-    "title": "The Second World War",
-    "author": "Winston Churchill",
-    "bookType": "HISTORY",
-    "publisher": "Houghton Mifflin",
-    "isbn": "9780395416853",
-    "isAvailable": true
-  },
-  {
-    "bookId": "5",
-    "title": "Steve Jobs",
-    "author": "Walter Isaacson",
-    "bookType": "BIOGRAPHY",
-    "publisher": "Simon & Schuster",
-    "isbn": "9781451648539",
-    "isAvailable": false
-  },
-  {
-    "bookId": "6",
-    "title": "Harry Potter and the Sorcerer's Stone",
-    "author": "J.K. Rowling",
-    "bookType": "FANTASY",
-    "publisher": "Scholastic",
-    "isbn": "9780590353427",
-    "isAvailable": true
-  },
-  {
-    "bookId": "7",
-    "title": "The Da Vinci Code",
-    "author": "Dan Brown",
-    "bookType": "MYSTERY",
-    "publisher": "Doubleday",
-    "isbn": "9780385504201",
-    "isAvailable": true
-  },
-  {
-    "bookId": "8",
-    "title": "Pride and Prejudice",
-    "author": "Jane Austen",
-    "bookType": "ROMANCE",
-    "publisher": "Penguin Classics",
-    "isbn": "9780141439518",
-    "isAvailable": false
-  },
-  {
-    "bookId": "9",
-    "title": "Sapiens: A Brief History of Humankind",
-    "author": "Yuval Noah Harari",
-    "bookType": "NON_FICTION",
-    "publisher": "Harper",
-    "isbn": "9780062316097",
-    "isAvailable": true
-  },
-  {
-    "bookId": "10",
-    "title": "The Alchemist",
-    "author": "Paulo Coelho",
-    "bookType": "FICTION",
-    "publisher": "HarperOne",
-    "isbn": "9780062315007",
-    "isAvailable": true
-  },
-  {
-    "bookId": "11",
-    "title": "A Game of Thrones",
-    "author": "George R.R. Martin",
-    "bookType": "FANTASY",
     "publisher": "Bantam Books",
-    "isbn": "9780553593716",
-    "isAvailable": false
+    "title": "A Brief History of Time"
   },
   {
-    "bookId": "12",
-    "title": "The Origin of Species",
-    "author": "Charles Darwin",
-    "bookType": "SCIENCE",
-    "publisher": "Signet Classics",
-    "isbn": "9780451529065",
-    "isAvailable": true
-  },
-  {
-    "bookId": "13",
-    "title": "Gone Girl",
-    "author": "Gillian Flynn",
-    "bookType": "MYSTERY",
-    "publisher": "Crown Publishing",
-    "isbn": "9780307588371",
-    "isAvailable": true
-  },
-  {
-    "bookId": "14",
-    "title": "Becoming",
-    "author": "Michelle Obama",
-    "bookType": "BIOGRAPHY",
-    "publisher": "Crown Publishing",
-    "isbn": "9781524763138",
-    "isAvailable": false
-  },
-  {
-    "bookId": "15",
-    "title": "The Immortal Life of Henrietta Lacks",
-    "author": "Rebecca Skloot",
-    "bookType": "NON_FICTION",
-    "publisher": "Crown Publishing",
-    "isbn": "9781400052189",
-    "isAvailable": true
-  },
-  {
-    "bookId": "16",
-    "title": "The Shining",
-    "author": "Stephen King",
-    "bookType": "FICTION",
-    "publisher": "Doubleday",
-    "isbn": "9780385121675",
-    "isAvailable": true
-  },
-  {
-    "bookId": "17",
-    "title": "The Guns of August",
-    "author": "Barbara W. Tuchman",
+    "author": "Winston Churchill",
+    "bookId": "4",
     "bookType": "HISTORY",
-    "publisher": "Ballantine Books",
-    "isbn": "9780345476098",
-    "isAvailable": false
+    "isAvailable": true,
+    "isbn": "9780395416853",
+    "publisher": "Houghton Mifflin",
+    "title": "The Second World War"
   },
   {
-    "bookId": "18",
-    "title": "The Selfish Gene",
-    "author": "Richard Dawkins",
-    "bookType": "SCIENCE",
-    "publisher": "Oxford University Press",
-    "isbn": "9780199291151",
-    "isAvailable": true
+    "author": "Walter Isaacson",
+    "bookId": "5",
+    "bookType": "BIOGRAPHY",
+    "isAvailable": false,
+    "isbn": "9781451648539",
+    "publisher": "Simon & Schuster",
+    "title": "Steve Jobs"
   },
   {
-    "bookId": "19",
-    "title": "Outlander",
-    "author": "Diana Gabaldon",
+    "author": "J.K. Rowling",
+    "bookId": "6",
+    "bookType": "FANTASY",
+    "isAvailable": true,
+    "isbn": "9780590353427",
+    "publisher": "Scholastic",
+    "title": "Harry Potter and the Sorcerer's Stone"
+  },
+  {
+    "author": "Dan Brown",
+    "bookId": "7",
+    "bookType": "MYSTERY",
+    "isAvailable": true,
+    "isbn": "9780385504201",
+    "publisher": "Doubleday",
+    "title": "The Da Vinci Code"
+  },
+  {
+    "author": "Jane Austen",
+    "bookId": "8",
     "bookType": "ROMANCE",
-    "publisher": "Dell",
+    "isAvailable": false,
+    "isbn": "9780141439518",
+    "publisher": "Penguin Classics",
+    "title": "Pride and Prejudice"
+  },
+  {
+    "author": "Yuval Noah Harari",
+    "bookId": "9",
+    "bookType": "NON_FICTION",
+    "isAvailable": true,
+    "isbn": "9780062316097",
+    "publisher": "Harper",
+    "title": "Sapiens: A Brief History of Humankind"
+  },
+  {
+    "author": "Paulo Coelho",
+    "bookId": "10",
+    "bookType": "FICTION",
+    "isAvailable": true,
+    "isbn": "9780062315007",
+    "publisher": "HarperOne",
+    "title": "The Alchemist"
+  },
+  {
+    "author": "George R.R. Martin",
+    "bookId": "11",
+    "bookType": "FANTASY",
+    "isAvailable": false,
+    "isbn": "9780553593716",
+    "publisher": "Bantam Books",
+    "title": "A Game of Thrones"
+  },
+  {
+    "author": "Charles Darwin",
+    "bookId": "12",
+    "bookType": "SCIENCE",
+    "isAvailable": true,
+    "isbn": "9780451529065",
+    "publisher": "Signet Classics",
+    "title": "The Origin of Species"
+  },
+  {
+    "author": "Gillian Flynn",
+    "bookId": "13",
+    "bookType": "MYSTERY",
+    "isAvailable": true,
+    "isbn": "9780307588371",
+    "publisher": "Crown Publishing",
+    "title": "Gone Girl"
+  },
+  {
+    "author": "Michelle Obama",
+    "bookId": "14",
+    "bookType": "BIOGRAPHY",
+    "isAvailable": false,
+    "isbn": "9781524763138",
+    "publisher": "Crown Publishing",
+    "title": "Becoming"
+  },
+  {
+    "author": "Rebecca Skloot",
+    "bookId": "15",
+    "bookType": "NON_FICTION",
+    "isAvailable": true,
+    "isbn": "9781400052189",
+    "publisher": "Crown Publishing",
+    "title": "The Immortal Life of Henrietta Lacks"
+  },
+  {
+    "author": "Stephen King",
+    "bookId": "16",
+    "bookType": "FICTION",
+    "isAvailable": true,
+    "isbn": "9780385121675",
+    "publisher": "Doubleday",
+    "title": "The Shining"
+  },
+  {
+    "author": "Barbara W. Tuchman",
+    "bookId": "17",
+    "bookType": "HISTORY",
+    "isAvailable": false,
+    "isbn": "9780345476098",
+    "publisher": "Ballantine Books",
+    "title": "The Guns of August"
+  },
+  {
+    "author": "Richard Dawkins",
+    "bookId": "18",
+    "bookType": "SCIENCE",
+    "isAvailable": true,
+    "isbn": "9780199291151",
+    "publisher": "Oxford University Press",
+    "title": "The Selfish Gene"
+  },
+  {
+    "author": "Diana Gabaldon",
+    "bookId": "19",
+    "bookType": "ROMANCE",
+    "isAvailable": true,
     "isbn": "9780440212560",
-    "isAvailable": true
+    "publisher": "Dell",
+    "title": "Outlander"
   },
   {
+    "author": "Walter Isaacson",
     "bookId": "20",
-    "title": "Einstein: His Life and Universe",
-    "author": "Walter Isaacson",
     "bookType": "BIOGRAPHY",
-    "publisher": "Simon & Schuster",
+    "isAvailable": false,
     "isbn": "9780743264747",
-    "isAvailable": false
+    "publisher": "Simon & Schuster",
+    "title": "Einstein: His Life and Universe"
   },
   {
-    "bookId": "21",
-    "title": "Einstein: His Life and Universe",
     "author": "Walter Isaacson",
+    "bookId": "21",
     "bookType": "BIOGRAPHY",
-    "publisher": "Simon & Schuster",
+    "isAvailable": false,
     "isbn": "9780743264747",
-    "isAvailable": false
+    "publisher": "Simon & Schuster",
+    "title": "Einstein: His Life and Universe"
   }
 ]

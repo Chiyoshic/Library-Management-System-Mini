@@ -221,7 +221,7 @@ bool book::addBook(const book& newBook) {
     
     // 添加新书并保存
     allBooks.push_back(newBook);
-    return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+    return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
 }
 
 // 根据ID查找图书
@@ -253,7 +253,7 @@ bool book::updateBook(const book& updatedBook) {
     }
     
     if (found) {
-        return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+        return saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
     } else {
         std::cerr << "Book not found" << std::endl;
         return false;

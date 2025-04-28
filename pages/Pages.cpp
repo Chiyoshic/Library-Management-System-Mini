@@ -1017,7 +1017,7 @@ void delete_book_page(User* user) {
             
             if (found) {
                 // 保存更新后的图书列表
-                bool success = book::saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/books.json");
+                bool success = book::saveToFile(allBooks, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
                 
                 if (success) {
                     show_success = true;
