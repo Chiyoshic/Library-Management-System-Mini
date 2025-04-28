@@ -40,6 +40,163 @@ void admin_dashboard_page(User* user);
 void student_dashboard_page(User* user);
 void manage_books_page(User* user);
 void student_register_page();
+void add_book_page(User* user);
+
+void add_book_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 图书信息变量
+    std::string book_id;  // 修改：添加图书ID输入变量
+    std::string title;
+    std::string author;
+    std::string publisher;
+    std::string isbn;
+    int bookType = 0;
+    std::string error_message;
+    bool show_error = false;
+    bool show_success = false;
+    
+    // 创建输入框
+    auto id_input = Input(&book_id, "请输入图书ID") | size(WIDTH, EQUAL, 30);  // 修改：添加图书ID输入框
+    auto title_input = Input(&title, "请输入图书标题") | size(WIDTH, EQUAL, 30);
+    auto author_input = Input(&author, "请输入作者") | size(WIDTH, EQUAL, 30);
+    auto publisher_input = Input(&publisher, "请输入出版社") | size(WIDTH, EQUAL, 30);
+    auto isbn_input = Input(&isbn, "请输入ISBN") | size(WIDTH, EQUAL, 30);
+    
+    // 图书类型选择
+    std::vector<std::string> type_entries = {
+        "小说", "非小说", "科学", "历史", 
+        "传记", "奇幻", "悬疑", "爱情"
+    };
+    int type_selected = 0;
+    auto type_menu = Radiobox(&type_entries, &type_selected);
+    
+    // 创建保存按钮
+    bool save_clicked = false;
+    auto save_button = Button("保存", [&] { save_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        manage_books_page(user);
+    });
+    
+    // 组合所有组件
+    auto container = Container::Vertical({
+        id_input,  // 修改：添加图书ID输入框到界面
+        title_input,
+        author_input,
+        publisher_input,
+        isbn_input,
+        type_menu,
+        Container::Horizontal({
+            save_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("录入图书") | bold | hcenter,
+            separator(),
+            vbox({
+                hbox(text(" 图书ID: "), id_input->Render()) | hcenter,  // 修改：添加图书ID输入框到渲染
+                hbox(text(" 标题: "), title_input->Render()) | hcenter,
+                hbox(text(" 作者: "), author_input->Render()) | hcenter,
+                hbox(text(" 出版社: "), publisher_input->Render()) | hcenter,
+                hbox(text(" ISBN: "), isbn_input->Render()) | hcenter,
+                hbox(text(" 类型: "), type_menu->Render()) | hcenter,
+                show_error ? text(error_message) | color(Color::Red) | hcenter : text(""),
+                show_success ? text("图书录入成功！") | color(Color::Green) | hcenter : text(""),
+                separator(),
+                hbox(save_button->Render(), back_button->Render()) | hcenter,
+            }) | border,
+        });
+    });
+
+    // 处理保存按钮点击事件
+    auto save_handler = CatchEvent(renderer, [&](Event event) {
+        if (save_clicked) {
+            save_clicked = false;
+            
+            // 基本输入验证
+            if (book_id.empty() || title.empty() || author.empty() || 
+                publisher.empty() || isbn.empty()) {
+                show_error = true;
+                show_success = false;
+                error_message = "所有字段都不能为空";
+                return true;
+            }
+            
+            // 创建图书对象
+            book newBook;
+            newBook.setBookId(book_id);  // 修改：直接设置用户输入的ID
+            newBook.setTitle(title);
+            newBook.setAuthor(author);
+            newBook.setPublisher(publisher);
+            newBook.setIsbn(isbn);
+            
+            // 根据选择的类型设置书籍类型
+            book::type bookTypeEnum;
+            switch(type_selected) {
+                case 0: bookTypeEnum = book::FICTION; break;
+                case 1: bookTypeEnum = book::NON_FICTION; break;
+                case 2: bookTypeEnum = book::SCIENCE; break;
+                case 3: bookTypeEnum = book::HISTORY; break;
+                case 4: bookTypeEnum = book::BIOGRAPHY; break;
+                case 5: bookTypeEnum = book::FANTASY; break;
+                case 6: bookTypeEnum = book::MYSTERY; break;
+                case 7: bookTypeEnum = book::ROMANCE; break;
+                default: bookTypeEnum = book::FICTION; break;
+            }
+            newBook.setBookType(bookTypeEnum);
+            newBook.setIsAvailable(true);
+            
+            // 调用book::addBook方法保存图书
+            bool success = book::addBook(newBook);
+            if (success) {
+                show_error = false;
+                show_success = true;
+                
+                // 清空输入框，方便继续添加
+                book_id.clear();
+                title.clear();
+                author.clear();
+                publisher.clear();
+                isbn.clear();
+                type_selected = 0;
+                
+                // 显示保存成功，并在短暂延迟后自动返回
+                std::thread([&screen]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                    screen.ExitLoopClosure()();
+                }).detach();
+                
+                return true;
+            } else {
+                show_error = true;
+                show_success = false;
+                error_message = "保存失败，图书ID可能已存在";
+                return true;
+            }
+        }
+        
+        return false;
+    });
+
+    screen.Loop(save_handler);
+    
+    // 如果是因为保存成功而退出的，则返回管理页面
+    if (show_success) {
+        clearScreen();
+        manage_books_page(user);
+    }
+}
 
 void admin_login_page() {
     clearScreen();
@@ -271,9 +428,11 @@ void manage_books_page(User* user) {
         search_books_page(user);
     });
     
-    auto add_books_button = Button("录入图书", [] {
-        // 录入图书功能待实现
-        std::cout << "进入录入图书页面" << std::endl;
+    auto add_books_button = Button("录入图书", [&] {
+        // 调用图书录入页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        add_book_page(user);
     });
     
     auto delete_books_button = Button("删除图书", [] {

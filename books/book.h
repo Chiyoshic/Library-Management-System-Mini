@@ -14,6 +14,7 @@ using json = nlohmann::json;
 
 class book {
 public:
+    static int nextId;
     std::string bookId;
     std::string title;
     std::string author;
@@ -33,6 +34,7 @@ public:
     
     // 构造函数
     book();
+    static std::string generateBookId();
     book(const std::string& id, const std::string& title, const std::string& author, 
          type bookType, const std::string& publisher, const std::string& isbn, 
          bool isAvailable);
