@@ -27,7 +27,7 @@ private:
     Role userRole;
 
 public:
-    User(); // Default constructor
+    User(); // 默认构造函数
     User(int id, const std::string& name, const std::string& password, Role role = STUDENT);
 
     int getId() const;
@@ -43,12 +43,17 @@ public:
     json toJson() const;
     void fromJson(const json& j);
     
-    // New static methods for user management
+    // 用户管理的静态方法
     static std::vector<User> loadFromFile(const std::string& filename);
     static std::vector<User> loadAllUsers();
     static bool saveToFile(const std::vector<User>& users, const std::string& filename);
     static User* authenticate(const std::string& username, const std::string& password);
     static bool registerUser(const std::string& username, const std::string& password, Role role = STUDENT);
+    
+    // 新增用户密码修改方法
+    static bool changePassword(int userId, const std::string& oldPassword, const std::string& newPassword);
+    // 新增管理员修改学生密码方法
+    static bool adminChangeUserPassword(int adminId, int userId, const std::string& newPassword);
 };
 
 #endif //USER_H
