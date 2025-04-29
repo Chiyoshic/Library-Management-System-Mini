@@ -10,6 +10,8 @@
 #include <book.h>
 #include <vector>
 #include <algorithm>
+#include <record.h> // Add include for the record class
+
 class book;
 using namespace std;
 
@@ -1220,9 +1222,21 @@ void manage_users_page(User* user) {
     
     // 检查学生是否有逾期图书的函数
     auto hasOverdueBooks = [](const User& u) -> bool {
-        // TODO: 实现实际的逾期检查逻辑
-        // 简单示例：偶数ID的用户被视为有逾期图书
-        return (u.getId() % 2 == 0);
+        // 加载所有借阅记录
+        std::vector<record> allRecords = record::readFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+        
+        // 筛选出该用户的记录
+        std::vector<record> userRecords = record::getUserRecords(u.getId(), allRecords);
+        
+        // 检查用户的记录中是否有逾期的
+        for (const auto& rec : userRecords) {
+            if (rec.isOverdue()) {
+                return true;
+            }
+        }
+        
+        // 没有逾期记录
+        return false;
     };
     
     // 为所有学生用户生成条目

@@ -50,6 +50,12 @@ public:
     // 检查借阅是否逾期（借阅期为15天）
     bool isOverdue() const;
     
+    // 检查借阅是否即将逾期（n天内）
+    bool willBeOverdueSoon(int days = 3) const;
+    
+    // 获取即将逾期的记录
+    static std::vector<record> getSoonOverdueRecords(const std::vector<record>& records, int days = 3);
+    
     // 获取逾期天数
     int getOverdueDays() const;
     

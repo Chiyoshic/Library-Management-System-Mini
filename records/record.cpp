@@ -117,6 +117,45 @@ std::vector<record> record::getOverdueRecords(const std::vector<record>& records
     return overdueRecords;
 }
 
+// 检查借阅是否即将逾期（n天内）
+bool record::willBeOverdueSoon(int days) const {
+    // 如果已经归还或已经逾期，则不是即将逾期
+    if (isReturned() || isOverdue()) {
+        return false;
+    }
+    
+    // 借阅期限（15天，转换为秒）
+    const time_t BORROW_PERIOD = 15 * 24 * 60 * 60;
+    
+    // 当前时间
+    time_t currentTime = time(nullptr);
+    
+    // 借阅已经过的时间
+    time_t elapsedTime = currentTime - borrowTime;
+    
+    // 剩余时间（秒）
+    time_t remainingTime = BORROW_PERIOD - elapsedTime;
+    
+    // 将预警天数转换为秒
+    time_t warningPeriod = days * 24 * 60 * 60;
+    
+    // 如果剩余时间小于预警时间，但大于0（未逾期），则是即将逾期
+    return (remainingTime <= warningPeriod) && (remainingTime > 0);
+}
+
+// 获取即将逾期的记录
+std::vector<record> record::getSoonOverdueRecords(const std::vector<record>& records, int days) {
+    std::vector<record> soonOverdueRecords;
+    
+    for (const auto& rec : records) {
+        if (rec.willBeOverdueSoon(days)) {
+            soonOverdueRecords.push_back(rec);
+        }
+    }
+    
+    return soonOverdueRecords;
+}
+
 // JSON序列化
 json record::toJson() const {
     json j;
