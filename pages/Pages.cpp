@@ -1228,14 +1228,15 @@ void manage_users_page(User* user) {
         // 筛选出该用户的记录
         std::vector<record> userRecords = record::getUserRecords(u.getId(), allRecords);
         
-        // 检查用户的记录中是否有逾期的
+        // 检查用户的记录中是否有未归还且逾期的
+        // 注意：已归还的书籍，即使之前逾期归还，也不会导致用户显示为红色
         for (const auto& rec : userRecords) {
-            if (rec.isOverdue()) {
-                return true;
+            if (!rec.isReturned() && rec.isOverdue()) {
+                return true; // 只有当前有未归还的逾期图书时才返回true
             }
         }
         
-        // 没有逾期记录
+        // 没有未归还的逾期记录，或已归还全部图书（即使有些是逾期归还的）
         return false;
     };
     
@@ -1258,9 +1259,12 @@ void manage_users_page(User* user) {
         for (size_t i = 0; i < users_entries.size(); ++i) {
             Element e = text(users_entries[i]);
             
-            // 如果有逾期图书，使用红色显示
+            // 如果用户有未归还的逾期图书，显示为红色
+            // 否则显示为白色（包括已归还全部图书的用户，即使有些是逾期归还的）
             if (is_overdue[i]) {
                 e = e | color(Color::Red);
+            } else {
+                e = e | color(Color::White);
             }
             
             // 如果是被选中的项目，添加高亮

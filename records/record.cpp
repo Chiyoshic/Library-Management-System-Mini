@@ -331,6 +331,22 @@ bool record::hasUserBorrowedBook(int userID, int bookID, const std::vector<recor
     return false;
 }
 
+// 检查用户是否已归还所有借阅的图书
+bool record::hasUserReturnedAllBooks(int userID, const std::vector<record>& records) {
+    // 获取用户的借阅记录
+    std::vector<record> userRecords = getUserRecords(userID, records);
+    
+    // 检查是否有未归还的图书
+    for (const auto& rec : userRecords) {
+        if (!rec.isReturned()) {
+            return false; // 发现未归还的图书
+        }
+    }
+    
+    // 如果没有未归还的图书，但用户有借阅记录，则表示已全部归还
+    return !userRecords.empty();
+}
+
 // 格式化显示时间
 std::string record::formatTime(time_t time) {
     if (time == 0) {

@@ -95,6 +95,9 @@ public:
     // 检查用户是否已借此书
     static bool hasUserBorrowedBook(int userID, int bookID, const std::vector<record>& records);
     
+    // 检查用户是否已归还所有借阅的图书
+    static bool hasUserReturnedAllBooks(int userID, const std::vector<record>& records);
+    
     // 格式化显示时间
     static std::string formatTime(time_t time);
     
