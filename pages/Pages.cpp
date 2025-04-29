@@ -369,9 +369,10 @@ void admin_dashboard_page(User* user) {
         manage_books_page(user);
     });
     
-    auto manage_users_button = Button("用户管理", [] {
-        // 用户管理功能待实现
-        std::cout << "进入用户管理页面" << std::endl;
+    auto manage_users_button = Button("用户管理", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        manage_users_page(user);
     });
     
     auto view_stats_button = Button("统计信息", [] {
@@ -1043,4 +1044,265 @@ void delete_book_page(User* user) {
         clearScreen();
         manage_books_page(user);
     }
+}
+
+// 用户管理页面
+void manage_users_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 加载所有学生用户
+    std::vector<User> all_users = User::loadAllUsers();
+    std::vector<User> student_users;
+    
+    // 过滤出学生用户
+    for (const auto& u : all_users) {
+        if (u.getRole() == User::STUDENT) {
+            student_users.push_back(u);
+        }
+    }
+    
+    // 搜索条件
+    std::string search_id;
+    bool has_searched = false;
+    
+    // 搜索结果
+    std::vector<User> search_results;
+    
+    // 创建用户项目的显示项
+    auto createUserEntry = [](const User& u) -> std::string {
+        // 固定宽度以防止溢出
+        const int id_width = 10;
+        const int name_width = 20;
+        
+        // 截断过长的字符串并确保填充宽度不为负数
+        std::string id = std::to_string(u.getId()).substr(0, id_width);
+        std::string name = u.getName().substr(0, name_width);
+        
+        // 添加空格填充至固定宽度
+        int id_padding = std::max(0, id_width - (int)id.length());
+        int name_padding = std::max(0, name_width - (int)name.length());
+        
+        // 创建格式化的条目字符串
+        std::string entry = 
+            id + std::string(id_padding, ' ') + " | " +
+            name + std::string(name_padding, ' ');
+            
+        return entry;
+    };
+    
+    // 检查学生是否有逾期图书的函数
+    // 注意：这是一个示例函数，实际实现应该连接到系统的借阅记录
+    auto hasOverdueBooks = [](const User& u) -> bool {
+        // TODO: 实现实际的逾期检查逻辑
+        // 简单示例：偶数ID的用户被视为有逾期图书
+        return (u.getId() % 2 == 0);
+    };
+    
+    // 为所有学生用户生成条目
+    std::vector<std::string> users_entries;
+    std::vector<bool> is_overdue;
+    
+    for (const auto& u : student_users) {
+        users_entries.push_back(createUserEntry(u));
+        is_overdue.push_back(hasOverdueBooks(u));
+    }
+    
+    // 创建菜单组件，用于显示和选择用户
+    int users_menu_selected = 0;
+    auto users_menu = Menu(&users_entries, &users_menu_selected);
+    
+    // 自定义菜单样式，使逾期学生显示为红色
+    auto users_menu_renderer = Renderer(users_menu, [&] {
+        Elements elements;
+        for (size_t i = 0; i < users_entries.size(); ++i) {
+            Element e = text(users_entries[i]);
+            
+            // 如果有逾期图书，使用红色显示
+            if (is_overdue[i]) {
+                e = e | color(Color::Red);
+            }
+            
+            // 如果是被选中的项目，添加高亮
+            if ((int)i == users_menu_selected) {
+                e = e | bgcolor(Color::Blue);
+            }
+            
+            elements.push_back(e);
+        }
+        return vbox(elements) | frame;
+    });
+    
+    // 搜索结果相关
+    std::vector<std::string> search_entries;
+    std::vector<bool> search_is_overdue;
+    int search_menu_selected = 0;
+    
+    // 创建搜索结果菜单的渲染器
+    auto search_menu = Menu(&search_entries, &search_menu_selected);
+    auto search_menu_renderer = Renderer(search_menu, [&] {
+        Elements elements;
+        for (size_t i = 0; i < search_entries.size(); ++i) {
+            Element e = text(search_entries[i]);
+            
+            // 如果有逾期图书，使用红色显示
+            if (search_is_overdue[i]) {
+                e = e | color(Color::Red);
+            }
+            
+            // 如果是被选中的项目，添加高亮
+            if ((int)i == search_menu_selected) {
+                e = e | bgcolor(Color::Blue);
+            }
+            
+            elements.push_back(e);
+        }
+        return vbox(elements) | frame;
+    });
+    
+    // 创建输入框
+    auto id_input = Input(&search_id, "输入用户ID搜索");
+    
+    // 创建搜索按钮
+    bool search_clicked = false;
+    auto search_button = Button("搜索", [&] { search_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        admin_dashboard_page(user);
+    });
+    
+    // 搜索框和按钮区域
+    auto search_container = Container::Vertical({
+        id_input,
+        search_button,
+        back_button
+    });
+    
+    // TAB导航相关 - 添加焦点控制变量
+    bool users_area_focused = true;
+    
+    // 使用合适的布局容器
+    auto main_container = Container::Horizontal({
+        users_menu,
+        Container::Vertical({
+            search_container
+        })
+    });
+    
+    // 渲染器
+    auto renderer = Renderer(main_container, [&] {
+        // 表头
+        Element header = hbox({
+            text("用户ID") | size(WIDTH, EQUAL, 10),
+            text(" | "),
+            text("用户名") | size(WIDTH, EQUAL, 20)
+        }) | bold;
+        
+        // 根据焦点状态选择不同的边框风格和文本
+        std::string users_title = users_area_focused ? "学生用户列表 [已选中]" : "学生用户列表";
+        std::string search_title = !users_area_focused ? "搜索区域 [已选中]" : "搜索区域";
+        
+        // 修改渲染以处理菜单项的样式
+        return vbox({
+            // 页面标题
+            text("用户管理") | bold | hcenter,
+            text("管理员: " + user->getName()) | hcenter,
+            text("注：有逾期图书的学生显示为红色") | color(Color::Red) | hcenter,
+            separator(),
+            
+            // 左侧：所有学生用户列表
+            hbox({
+                vbox({
+                    text(users_title) | bold | hcenter,
+                    header,
+                    separator(),
+                    // 在这里使用自定义渲染器
+                    users_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 10)
+                }) | flex,
+                
+                // 右侧：搜索区域
+                vbox({
+                    // 搜索控件
+                    text(search_title) | bold | hcenter,
+                    
+                    // 修改为垂直布局并居中
+                    vbox({
+                        hbox(text("按ID搜索:"), id_input->Render()),
+                        search_button->Render(),
+                        separator(),
+                        
+                        // 搜索结果
+                        has_searched ? vbox({
+                            text("搜索结果") | bold,
+                            header,
+                            separator(),
+                            search_entries.empty() 
+                                ? text("没有找到用户") 
+                                : search_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 6)
+                        }) : text(""),
+                        
+                        // 返回按钮
+                        back_button->Render()
+                    }) | size(WIDTH, GREATER_THAN, 40),
+                }) | size(WIDTH, EQUAL, 45),
+            }),
+        });
+    });
+    
+    // 事件处理
+    auto event_handler = CatchEvent(renderer, [&](Event event) {
+        // 处理TAB键 - 在用户列表区域和搜索区域之间切换
+        if (event == Event::Tab) {
+            users_area_focused = !users_area_focused;
+            
+            // 根据当前焦点区域设置输入焦点到相应组件
+            if (users_area_focused) {
+                main_container->TakeFocus();
+                users_menu->TakeFocus();
+            } else {
+                search_container->TakeFocus();
+                id_input->TakeFocus();
+            }
+            
+            return true;
+        }
+        
+        // 处理搜索按钮点击
+        if (search_clicked) {
+            search_clicked = false;
+            has_searched = true;
+            search_results.clear();
+            search_entries.clear();
+            search_is_overdue.clear();
+            
+            // 查找匹配的用户ID
+            for (const auto& u : student_users) {
+                if (std::to_string(u.getId()).find(search_id) != std::string::npos) {
+                    search_results.push_back(u);
+                    search_entries.push_back(createUserEntry(u));
+                    search_is_overdue.push_back(hasOverdueBooks(u));
+                }
+            }
+            
+            // 重置搜索菜单选择
+            search_menu_selected = 0;
+            
+            // 如果有搜索结果，自动切换到搜索结果区域
+            if (!search_entries.empty()) {
+                users_area_focused = false;
+            }
+            
+            return true;
+        }
+        
+        return false;
+    });
+    
+    // 使用屏幕的 Loop 方法运行界面
+    screen.Loop(event_handler);
 }

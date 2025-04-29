@@ -15,7 +15,8 @@ void student_register_page();
 void admin_dashboard_page(User* user);
 void student_dashboard_page(User* user);
 void manage_books_page(User* user);
+void manage_users_page(User* user);  // Added new function declaration
 void search_books_page(User* user);
 void add_book_page(User* user);
-void delete_book_page(User* user); // 添加删除图书页面的函数声明
+void delete_book_page(User* user);
 #endif //INDEX_H
