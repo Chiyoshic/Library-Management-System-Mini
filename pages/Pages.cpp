@@ -774,11 +774,9 @@ void search_books_page(User* user) {
     
     // 搜索框和按钮区域
     auto search_container = Container::Vertical({
-        Container::Horizontal({
-            id_input,
-            title_input,
-            search_button
-        }),
+        id_input,
+        title_input,
+        search_button,
         back_button
     });
     
@@ -837,19 +835,12 @@ void search_books_page(User* user) {
             vbox({
                 // 搜索控件
                 text(search_title) | bold | hcenter,
-                hbox({
-                    vbox({
-                        text("按ID搜索:"),
-                        id_input->Render()
-                    }),
-                    vbox({
-                        text("按标题搜索:"),
-                        title_input->Render()
-                    }),
-                    vbox({
-                        text(" "),
-                        search_button->Render()
-                    })
+                
+                // 修改为垂直布局并居中
+                vbox({
+                    hbox(text("按ID搜索:"), id_input->Render()) | hcenter,
+                    hbox(text("按标题搜索:"), title_input->Render()) | hcenter,
+                    search_button->Render() | hcenter
                 }),
                 
                 // 搜索结果

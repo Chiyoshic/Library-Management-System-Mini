@@ -47,6 +47,15 @@ public:
     // 设置归还时间（用于归还图书）
     void returnBook();
     
+    // 检查借阅是否逾期（借阅期为15天）
+    bool isOverdue() const;
+    
+    // 获取逾期天数
+    int getOverdueDays() const;
+    
+    // 获取所有逾期记录
+    static std::vector<record> getOverdueRecords(const std::vector<record>& records);
+    
     // JSON序列化
     json toJson() const;
     

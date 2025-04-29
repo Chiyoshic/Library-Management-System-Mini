@@ -58,6 +58,65 @@ void record::returnBook() {
     returnTime = time(nullptr);
 }
 
+// 检查借阅是否逾期（借阅期为15天）
+bool record::isOverdue() const {
+    // 借阅期限（15天，转换为秒）
+    const time_t BORROW_PERIOD = 15 * 24 * 60 * 60; 
+    
+    if (isReturned()) {
+        // 已归还，检查是否逾期归还
+        return (returnTime - borrowTime) > BORROW_PERIOD;
+    } else {
+        // 未归还，检查当前是否已逾期
+        time_t currentTime = time(nullptr);
+        return (currentTime - borrowTime) > BORROW_PERIOD;
+    }
+}
+
+// 获取逾期天数
+int record::getOverdueDays() const {
+    // 借阅期限（15天，转换为秒）
+    const time_t BORROW_PERIOD = 15 * 24 * 60 * 60;
+    
+    // 计算实际借阅时间（秒）
+    time_t actualBorrowTime;
+    if (isReturned()) {
+        // 已归还，使用实际归还时间
+        actualBorrowTime = returnTime - borrowTime;
+    } else {
+        // 未归还，使用当前时间计算
+        actualBorrowTime = time(nullptr) - borrowTime;
+    }
+    
+    // 如果未逾期，返回0
+    if (actualBorrowTime <= BORROW_PERIOD) {
+        return 0;
+    }
+    
+    // 计算逾期天数（向上取整）
+    time_t overdueSeconds = actualBorrowTime - BORROW_PERIOD;
+    int overdueDays = static_cast<int>(overdueSeconds / (24 * 60 * 60));
+    // 如果有不足一天的部分，算作一天
+    if (overdueSeconds % (24 * 60 * 60) > 0) {
+        overdueDays++;
+    }
+    
+    return overdueDays;
+}
+
+// 获取所有逾期记录
+std::vector<record> record::getOverdueRecords(const std::vector<record>& records) {
+    std::vector<record> overdueRecords;
+    
+    for (const auto& rec : records) {
+        if (rec.isOverdue()) {
+            overdueRecords.push_back(rec);
+        }
+    }
+    
+    return overdueRecords;
+}
+
 // JSON序列化
 json record::toJson() const {
     json j;

@@ -1,0 +1,62 @@
+[
+  {
+    "borrowerID": 2,
+    "bookID": 2,
+    "borrowTime": 1709251200,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 3,
+    "bookID": 5,
+    "borrowTime": 1711065600,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 5,
+    "bookID": 8,
+    "borrowTime": 1710288000,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 6,
+    "bookID": 11,
+    "borrowTime": 1712448000,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 7,
+    "bookID": 14,
+    "borrowTime": 1711756800,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 9,
+    "bookID": 17,
+    "borrowTime": 1710806400,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 10,
+    "bookID": 20,
+    "borrowTime": 1709596800,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 11,
+    "bookID": 21,
+    "borrowTime": 1712016000,
+    "returnTime": 0
+  },
+  {
+    "borrowerID": 12,
+    "bookID": 6,
+    "borrowTime": 1709769600,
+    "returnTime": 1711238400
+  },
+  {
+    "borrowerID": 2,
+    "bookID": 9,
+    "borrowTime": 1708992000,
+    "returnTime": 1710979200
+  }
+]
