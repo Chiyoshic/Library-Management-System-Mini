@@ -1071,6 +1071,131 @@ void manage_users_page(User* user) {
     // 搜索结果
     std::vector<User> search_results;
     
+    // 用户详情相关变量
+    bool show_user_detail = false;  // 是否显示用户详情
+    User selected_user;  // 当前选中的用户
+    std::string new_password;  // 新密码输入
+    std::string password_message;  // 密码操作结果消息
+    bool password_success = false;  // 密码修改是否成功
+    bool password_error = false;  // 密码修改是否有错误
+    
+    // TAB导航相关 - 添加三区域焦点控制变量
+    enum FocusArea {
+        USER_LIST,
+        SEARCH_AREA,
+        PASSWORD_AREA
+    };
+    FocusArea current_focus = USER_LIST;
+    
+    // 加载所有图书标题，便于查询
+    std::map<std::string, std::string> bookTitles;
+    std::ifstream bookFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
+    if (bookFile.is_open()) {
+        try {
+            json booksJson;
+            bookFile >> booksJson;
+            
+            for (const auto& book : booksJson) {
+                std::string id = book["bookId"].get<std::string>();
+                std::string title = book["title"].get<std::string>();
+                bookTitles[id] = title;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "解析图书数据时出错: " << e.what() << std::endl;
+        }
+        bookFile.close();
+    }
+    
+    // 模拟的借阅记录类型定义
+    struct BorrowRecord {
+        int bookID;
+        std::string bookTitle;   // 图书标题
+        time_t borrowTime;
+        time_t returnTime;
+        bool isOverdue;          // 是否逾期
+        int overdueDays;         // 逾期天数
+    };
+    
+    // 从record.json加载用户的借阅记录
+    auto loadUserBorrowRecords = [&bookTitles](int userId) -> std::vector<BorrowRecord> {
+        std::vector<BorrowRecord> records;
+        
+        // 打开并读取record.json文件
+        std::ifstream file("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+        if (!file.is_open()) {
+            std::cerr << "无法打开借阅记录文件" << std::endl;
+            return records;
+        }
+        
+        try {
+            // 解析JSON数据
+            json recordsJson;
+            file >> recordsJson;
+            
+            // 获取当前时间
+            time_t currentTime = time(nullptr);
+            
+            // 遍历所有记录，找出属于该用户的记录
+            for (const auto& record : recordsJson) {
+                if (record["borrowerID"].get<int>() == userId) {
+                    BorrowRecord borrowRecord;
+                    borrowRecord.bookID = record["bookID"].get<int>();
+                    
+                    // 关联查询图书标题
+                    std::string bookIdStr = std::to_string(borrowRecord.bookID);
+                    if (bookTitles.find(bookIdStr) != bookTitles.end()) {
+                        borrowRecord.bookTitle = bookTitles[bookIdStr];
+                    } else {
+                        borrowRecord.bookTitle = "未知图书";
+                    }
+                    
+                    borrowRecord.borrowTime = record["borrowTime"].get<time_t>();
+                    borrowRecord.returnTime = record["returnTime"].get<time_t>();
+                    
+                    // 检查是否逾期（假设借阅期限为15天）
+                    const time_t borrowPeriod = 15 * 24 * 60 * 60; // 15天（秒）
+                    const time_t dueTime = borrowRecord.borrowTime + borrowPeriod;
+                    
+                    // 计算逾期天数
+                    if (borrowRecord.returnTime == 0) { // 未归还
+                        if (currentTime > dueTime) { // 已逾期
+                            borrowRecord.isOverdue = true;
+                            borrowRecord.overdueDays = (currentTime - dueTime) / (24 * 60 * 60);
+                        } else {
+                            borrowRecord.isOverdue = false;
+                            borrowRecord.overdueDays = 0;
+                        }
+                    } else { // 已归还
+                        if (borrowRecord.returnTime > dueTime) { // 归还时已逾期
+                            borrowRecord.isOverdue = false; // 已归还，不标红
+                            borrowRecord.overdueDays = (borrowRecord.returnTime - dueTime) / (24 * 60 * 60);
+                        } else {
+                            borrowRecord.isOverdue = false;
+                            borrowRecord.overdueDays = 0;
+                        }
+                    }
+                    
+                    records.push_back(borrowRecord);
+                }
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "解析借阅记录出错: " << e.what() << std::endl;
+        }
+        
+        file.close();
+        return records;
+    };
+    
+    // 格式化时间函数
+    auto formatTime = [](time_t time) -> std::string {
+        if (time == 0) return "未归还";
+        
+        struct tm* timeinfo = localtime(&time);
+        char buffer[80];
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d", timeinfo);
+        return std::string(buffer);
+    };
+    
     // 创建用户项目的显示项
     auto createUserEntry = [](const User& u) -> std::string {
         // 固定宽度以防止溢出
@@ -1094,7 +1219,6 @@ void manage_users_page(User* user) {
     };
     
     // 检查学生是否有逾期图书的函数
-    // 注意：这是一个示例函数，实际实现应该连接到系统的借阅记录
     auto hasOverdueBooks = [](const User& u) -> bool {
         // TODO: 实现实际的逾期检查逻辑
         // 简单示例：偶数ID的用户被视为有逾期图书
@@ -1165,9 +1289,16 @@ void manage_users_page(User* user) {
     // 创建输入框
     auto id_input = Input(&search_id, "输入用户ID搜索");
     
+    // 创建新密码输入框
+    auto password_input = Input(&new_password, "输入新密码") | size(WIDTH, EQUAL, 30);
+    
     // 创建搜索按钮
     bool search_clicked = false;
     auto search_button = Button("搜索", [&] { search_clicked = true; });
+    
+    // 创建修改密码按钮
+    bool change_password_clicked = false;
+    auto change_password_button = Button("修改密码", [&] { change_password_clicked = true; });
     
     // 创建返回按钮
     auto back_button = Button("返回", [&] {
@@ -1183,8 +1314,11 @@ void manage_users_page(User* user) {
         back_button
     });
     
-    // TAB导航相关 - 添加焦点控制变量
-    bool users_area_focused = true;
+    // 密码修改区域容器
+    auto password_container = Container::Vertical({
+        password_input,
+        change_password_button
+    });
     
     // 使用合适的布局容器
     auto main_container = Container::Horizontal({
@@ -1195,7 +1329,7 @@ void manage_users_page(User* user) {
     });
     
     // 渲染器
-    auto renderer = Renderer(main_container, [&] {
+    auto renderer = Renderer(main_container, [&] -> Element {
         // 表头
         Element header = hbox({
             text("用户ID") | size(WIDTH, EQUAL, 10),
@@ -1204,18 +1338,35 @@ void manage_users_page(User* user) {
         }) | bold;
         
         // 根据焦点状态选择不同的边框风格和文本
-        std::string users_title = users_area_focused ? "学生用户列表 [已选中]" : "学生用户列表";
-        std::string search_title = !users_area_focused ? "搜索区域 [已选中]" : "搜索区域";
+        std::string users_title, search_title, password_title;
         
-        // 修改渲染以处理菜单项的样式
-        return vbox({
+        if (current_focus == USER_LIST) {
+            users_title = "学生用户列表 [已选中]";
+            search_title = "搜索区域";
+            password_title = "密码修改区域";
+        } else if (current_focus == SEARCH_AREA) {
+            users_title = "学生用户列表";
+            search_title = "搜索区域 [已选中]";
+            password_title = "密码修改区域";
+        } else { // PASSWORD_AREA
+            users_title = "学生用户列表";
+            search_title = "搜索区域";
+            password_title = "密码修改区域 [已选中]";
+        }
+        
+        Elements elements;
+        
+        // 上方区域：用户列表和搜索功能
+        elements.push_back(vbox({
             // 页面标题
             text("用户管理") | bold | hcenter,
             text("管理员: " + user->getName()) | hcenter,
             text("注：有逾期图书的学生显示为红色") | color(Color::Red) | hcenter,
+            text("选中用户后按回车键查看详情") | color(Color::Blue) | hcenter,
+            text("按Tab键可在列表、搜索和密码区域之间切换") | color(Color::Yellow) | hcenter,
             separator(),
             
-            // 左侧：所有学生用户列表
+            // 左侧：所有学生用户列表 + 右侧：搜索区域
             hbox({
                 vbox({
                     text(users_title) | bold | hcenter,
@@ -1251,27 +1402,92 @@ void manage_users_page(User* user) {
                     }) | size(WIDTH, GREATER_THAN, 40),
                 }) | size(WIDTH, EQUAL, 45),
             }),
-        });
+        }));
+        
+        // 下方区域：用户详情区（如果已选择用户）
+        if (show_user_detail) {
+            // 获取用户的借阅记录
+            std::vector<BorrowRecord> borrow_records = loadUserBorrowRecords(selected_user.getId());
+            
+            // 创建借阅记录表格头部
+            Elements borrowed_elements;
+            borrowed_elements.push_back(
+                hbox({
+                    text("图书ID") | size(WIDTH, EQUAL, 8) | bold,
+                    text(" | "),
+                    text("图书标题") | size(WIDTH, EQUAL, 20) | bold,
+                    text(" | "),
+                    text("借阅日期") | size(WIDTH, EQUAL, 12) | bold,
+                    text(" | "),
+                    text("归还日期") | size(WIDTH, EQUAL, 12) | bold,
+                    text(" | "),
+                    text("状态") | size(WIDTH, EQUAL, 8) | bold,
+                    text(" | "),
+                    text("逾期天数") | size(WIDTH, EQUAL, 10) | bold,
+                }) | hcenter
+            );
+            borrowed_elements.push_back(separator());
+            
+            if (borrow_records.empty()) {
+                borrowed_elements.push_back(text("该用户没有借阅记录") | hcenter);
+            } else {
+                for (const auto& record : borrow_records) {
+                    // 创建一行记录
+                    Element book_entry = hbox({
+                        text(std::to_string(record.bookID)) | size(WIDTH, EQUAL, 8),
+                        text(" | "),
+                        text(record.bookTitle) | size(WIDTH, EQUAL, 20),
+                        text(" | "),
+                        text(formatTime(record.borrowTime)) | size(WIDTH, EQUAL, 12),
+                        text(" | "),
+                        text(formatTime(record.returnTime)) | size(WIDTH, EQUAL, 12),
+                        text(" | "),
+                        text(record.returnTime == 0 ? "借阅中" : "已归还") | size(WIDTH, EQUAL, 8),
+                        text(" | "),
+                        text(record.overdueDays > 0 ? std::to_string(record.overdueDays) + "天" : "-") | size(WIDTH, EQUAL, 10),
+                    });
+                    
+                    // 如果是未归还且逾期，显示为红色
+                    if (record.isOverdue && record.returnTime == 0) {
+                        book_entry = book_entry | color(Color::Red);
+                    }
+                    
+                    borrowed_elements.push_back(book_entry);
+                }
+            }
+            
+            // 添加用户详情区域
+            elements.push_back(separator());
+            elements.push_back(
+                vbox({
+                    text("用户详情：" + selected_user.getName() + " (ID: " + std::to_string(selected_user.getId()) + ")") | bold | hcenter,
+                    separator(),
+                    
+                    // 借阅记录区域
+                    vbox({
+                        text("借阅记录") | bold | hcenter,
+                        vbox(borrowed_elements) | border | size(HEIGHT, LESS_THAN, 8),
+                    }),
+                    
+                    separator(),
+                    
+                    // 密码修改区域
+                    vbox({
+                        text(password_title) | bold | hcenter,
+                        hbox(text("新密码: "), password_input->Render() | size(WIDTH, EQUAL, 30)) | hcenter,
+                        change_password_button->Render() | hcenter,
+                        password_error ? text(password_message) | color(Color::Red) | hcenter : text(""),
+                        password_success ? text(password_message) | color(Color::Green) | hcenter : text(""),
+                    }) | border,
+                }) | border
+            );
+        }
+        
+        return vbox(elements);
     });
     
     // 事件处理
     auto event_handler = CatchEvent(renderer, [&](Event event) {
-        // 处理TAB键 - 在用户列表区域和搜索区域之间切换
-        if (event == Event::Tab) {
-            users_area_focused = !users_area_focused;
-            
-            // 根据当前焦点区域设置输入焦点到相应组件
-            if (users_area_focused) {
-                main_container->TakeFocus();
-                users_menu->TakeFocus();
-            } else {
-                search_container->TakeFocus();
-                id_input->TakeFocus();
-            }
-            
-            return true;
-        }
-        
         // 处理搜索按钮点击
         if (search_clicked) {
             search_clicked = false;
@@ -1294,7 +1510,118 @@ void manage_users_page(User* user) {
             
             // 如果有搜索结果，自动切换到搜索结果区域
             if (!search_entries.empty()) {
-                users_area_focused = false;
+                current_focus = SEARCH_AREA;
+                search_menu->TakeFocus();
+            }
+            
+            return true;
+        }
+        
+        // 处理修改密码按钮点击
+        if (change_password_clicked && show_user_detail) {
+            change_password_clicked = false;
+            
+            // 验证新密码
+            if (new_password.empty()) {
+                password_error = true;
+                password_success = false;
+                password_message = "密码不能为空";
+                return true;
+            }
+            
+            // 调用管理员修改密码方法
+            bool success = User::adminChangeUserPassword(user->getId(), selected_user.getId(), new_password);
+            if (success) {
+                password_error = false;
+                password_success = true;
+                password_message = "密码修改成功";
+                new_password.clear();  // 清空密码输入
+            } else {
+                password_error = true;
+                password_success = false;
+                password_message = "密码修改失败";
+            }
+            
+            return true;
+        }
+        
+        // 处理回车键 - 显示选中用户的详情
+        if (event == Event::Return) {
+            if (current_focus == USER_LIST && !student_users.empty()) {
+                // 从主列表获取选中的用户
+                selected_user = student_users[users_menu_selected];
+                show_user_detail = true;
+                password_error = false;
+                password_success = false;
+                new_password.clear();
+                // 将焦点设置到密码输入框
+                current_focus = PASSWORD_AREA;
+                password_container->TakeFocus();
+                password_input->TakeFocus();
+                return true;
+            } else if (current_focus == SEARCH_AREA && has_searched && !search_results.empty()) {
+                // 从搜索结果获取选中的用户
+                selected_user = search_results[search_menu_selected];
+                show_user_detail = true;
+                password_error = false;
+                password_success = false;
+                new_password.clear();
+                // 将焦点设置到密码输入框
+                current_focus = PASSWORD_AREA;
+                password_container->TakeFocus();
+                password_input->TakeFocus();
+                return true;
+            } else if (current_focus == PASSWORD_AREA && show_user_detail) {
+                // 如果在密码区域按回车，触发修改密码
+                if (!new_password.empty()) {
+                    bool success = User::adminChangeUserPassword(user->getId(), selected_user.getId(), new_password);
+                    if (success) {
+                        password_error = false;
+                        password_success = true;
+                        password_message = "密码修改成功";
+                        new_password.clear();  // 清空密码输入
+                    } else {
+                        password_error = true;
+                        password_success = false;
+                        password_message = "密码修改失败";
+                    }
+                } else {
+                    password_error = true;
+                    password_success = false;
+                    password_message = "密码不能为空";
+                }
+                return true;
+            }
+        }
+        
+        // 处理TAB键 - 在用户列表区域、搜索区域和密码修改区域之间切换
+        if (event == Event::Tab) {
+            if (show_user_detail) {
+                // 如果显示用户详情，则在三个区域间循环切换
+                if (current_focus == USER_LIST) {
+                    current_focus = SEARCH_AREA;
+                    search_container->TakeFocus();
+                    id_input->TakeFocus();
+                } else if (current_focus == SEARCH_AREA) {
+                    current_focus = PASSWORD_AREA;
+                    password_container->TakeFocus();
+                    password_input->TakeFocus();
+                } else { // PASSWORD_AREA
+                    current_focus = USER_LIST;
+                    main_container->TakeFocus();
+                    users_menu->TakeFocus();
+                }
+            } else {
+                // 如果未显示用户详情，只在用户列表和搜索区域之间切换
+                if (current_focus == USER_LIST) {
+                    current_focus = SEARCH_AREA;
+                    search_container->TakeFocus();
+                    id_input->TakeFocus();
+                } else {
+                    current_focus = USER_LIST;
+                    main_container->TakeFocus();
+                    users_menu->TakeFocus();
+                }
             }
             
             return true;
