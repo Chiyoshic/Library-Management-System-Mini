@@ -43,6 +43,7 @@ void student_dashboard_page(User* user);
 void manage_books_page(User* user);
 void student_register_page();
 void add_book_page(User* user);
+void view_stats_page(User* user);  // Forward declaration
 
 void add_book_page(User* user) {
     clearScreen();
@@ -377,9 +378,10 @@ void admin_dashboard_page(User* user) {
         manage_users_page(user);
     });
     
-    auto view_stats_button = Button("统计信息", [] {
-        // 统计信息功能待实现
-        std::cout << "查看统计信息" << std::endl;
+    auto view_stats_button = Button("统计信息", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        view_stats_page(user);
     });
     
     auto query_borrows_button = Button("查询借阅", [] {
@@ -1260,7 +1262,7 @@ void manage_users_page(User* user) {
             Element e = text(users_entries[i]);
             
             // 如果用户有未归还的逾期图书，显示为红色
-            // 否则显示为白色（包括已归还全部图书的用户，即使有些是逾期归还的）
+            // 否则显示为白色（包括已归还全部图书，即使有些是逾期归还的）
             if (is_overdue[i]) {
                 e = e | color(Color::Red);
             } else {
@@ -1650,4 +1652,166 @@ void manage_users_page(User* user) {
     
     // 使用屏幕的 Loop 方法运行界面
     screen.Loop(event_handler);
+}
+
+// 图书统计信息页面
+void view_stats_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+    
+    // 加载所有图书
+    std::vector<book> all_books = book::loadAllBooks();
+    
+    // 获取所有图书借阅次数
+    std::map<int, int> borrow_counts = record::getBookBorrowCountsFromFile(
+        "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+    
+    // 创建包含借阅次数的图书信息列表
+    struct BookWithBorrowCount {
+        book bookInfo;
+        int borrowCount;
+        
+        // 构造函数
+        BookWithBorrowCount(const book& b, int count) : bookInfo(b), borrowCount(count) {}
+    };
+    
+    std::vector<BookWithBorrowCount> books_with_counts;
+    
+    // 合并图书信息和借阅次数
+    for (const auto& b : all_books) {
+        int bookID;
+        try {
+            bookID = std::stoi(b.getBookId());
+        } catch (const std::exception& e) {
+            std::cerr << "Error converting book ID: " << b.getBookId() << std::endl;
+            continue;
+        }
+        
+        // 查找该书的借阅次数，如果没有记录则为0
+        int count = 0;
+        if (borrow_counts.find(bookID) != borrow_counts.end()) {
+            count = borrow_counts[bookID];
+        }
+        
+        books_with_counts.emplace_back(b, count);
+    }
+    
+    // 按借阅次数降序排序
+    std::sort(books_with_counts.begin(), books_with_counts.end(), 
+              [](const BookWithBorrowCount& a, const BookWithBorrowCount& b) {
+                  return a.borrowCount > b.borrowCount;
+              });
+    
+    // 创建表格条目
+    std::vector<std::string> table_entries;
+    
+    // 为每本书创建表格行
+    for (const auto& item : books_with_counts) {
+        const book& b = item.bookInfo;
+        int count = item.borrowCount;
+        
+        // 将书籍类型转换为字符串
+        std::string typeStr;
+        switch(b.getBookType()) {
+            case book::FICTION: typeStr = "小说"; break;
+            case book::NON_FICTION: typeStr = "非小说"; break;
+            case book::SCIENCE: typeStr = "科学"; break;
+            case book::HISTORY: typeStr = "历史"; break;
+            case book::BIOGRAPHY: typeStr = "传记"; break;
+            case book::FANTASY: typeStr = "奇幻"; break;
+            case book::MYSTERY: typeStr = "悬疑"; break;
+            case book::ROMANCE: typeStr = "爱情"; break;
+            default: typeStr = "未知"; break;
+        }
+        
+        // 固定宽度以防止溢出
+        const int id_width = 8;
+        const int title_width = 20;
+        const int author_width = 15;
+        const int type_width = 10;
+        const int count_width = 10;
+        
+        // 截断过长的字符串并确保填充宽度不为负数
+        std::string id = b.getBookId().substr(0, id_width);
+        std::string title = b.getTitle().substr(0, title_width);
+        std::string author = b.getAuthor().substr(0, author_width);
+        typeStr = typeStr.substr(0, type_width);
+        std::string borrowCount = std::to_string(count);
+        
+        // 添加空格填充至固定宽度
+        int id_padding = std::max(0, id_width - (int)id.length());
+        int title_padding = std::max(0, title_width - (int)title.length());
+        int author_padding = std::max(0, author_width - (int)author.length());
+        int type_padding = std::max(0, type_width - (int)typeStr.length());
+        int count_padding = std::max(0, count_width - (int)borrowCount.length());
+        
+        // 创建格式化的条目字符串
+        std::string entry = 
+            id + std::string(id_padding, ' ') + " | " +
+            title + std::string(title_padding, ' ') + " | " +
+            author + std::string(author_padding, ' ') + " | " +
+            typeStr + std::string(type_padding, ' ') + " | " +
+            borrowCount + std::string(count_padding, ' ');
+            
+        table_entries.push_back(entry);
+    }
+    
+    // 创建菜单组件，用于显示图书借阅统计
+    int menu_selected = 0;
+    auto table_menu = Menu(&table_entries, &menu_selected);
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        
+        // 根据用户角色返回相应页面
+        if (user && user->getRole() == User::ADMIN) {
+            admin_dashboard_page(user);
+        } else {
+            student_dashboard_page(user);
+        }
+    });
+    
+    // 主容器
+    auto container = Container::Vertical({
+        table_menu,
+        back_button
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        // 表头
+        Element header = hbox({
+            text("图书ID") | size(WIDTH, EQUAL, 8) | bold,
+            text(" | "),
+            text("标题") | size(WIDTH, EQUAL, 20) | bold,
+            text(" | "),
+            text("作者") | size(WIDTH, EQUAL, 15) | bold,
+            text(" | "),
+            text("类型") | size(WIDTH, EQUAL, 10) | bold,
+            text(" | "),
+            text("借阅次数") | size(WIDTH, EQUAL, 10) | bold
+        });
+        
+        return vbox({
+            text("图书借阅统计 (降序排列)") | bold | hcenter,
+            text("用户: " + (user ? user->getName() : "访客")) | hcenter,
+            separator(),
+            
+            vbox({
+                header,
+                separator(),
+                table_menu->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 15)
+            }) | border,
+            
+            separator(),
+            back_button->Render() | hcenter
+        });
+    });
+    
+    // 启动交互循环
+    screen.Loop(renderer);
 }
