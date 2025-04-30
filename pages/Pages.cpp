@@ -679,6 +679,9 @@ void search_books_page(User* user) {
     std::vector<book> all_books = book::loadAllBooks();
     std::vector<book> search_results;
     
+    // 加载所有借阅记录，用于查询当前借阅者
+    std::vector<record> all_records = record::readFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+    
     // 搜索条件
     std::string search_id;
     std::string search_title;
@@ -689,7 +692,7 @@ void search_books_page(User* user) {
     std::vector<std::string> books_entries;
     
     // 创建图书项目的显示项
-    auto createBookEntry = [](const book& b) -> std::string {
+    auto createBookEntry = [&all_records](const book& b) -> std::string {
         // 将书籍类型转换为字符串
         std::string typeStr;
         switch(b.getBookType()) {
@@ -704,6 +707,25 @@ void search_books_page(User* user) {
             default: typeStr = "未知"; break;
         }
         
+        // 查找当前借阅者ID
+        std::string borrowerId = "-";
+        if (!b.getIsAvailable()) {  // 只有当图书不可借阅时才显示借阅者ID
+            int bookIdInt;
+            try {
+                bookIdInt = std::stoi(b.getBookId());
+                
+                // 查找是否有未归还的借阅记录
+                for (const auto& rec : all_records) {
+                    if (rec.getBookID() == bookIdInt && !rec.isReturned()) {
+                        borrowerId = std::to_string(rec.getBorrowerID());
+                        break;
+                    }
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error converting book ID: " << b.getBookId() << std::endl;
+            }
+        }
+        
         // 固定宽度以防止溢出
         const int id_width = 8;
         const int title_width = 20;
@@ -711,6 +733,7 @@ void search_books_page(User* user) {
         const int type_width = 12;
         const int publisher_width = 15;
         const int isbn_width = 15;
+        const int borrower_width = 8;
         
         // 截断过长的字符串并确保填充宽度不为负数
         std::string id = b.getBookId().substr(0, id_width);
@@ -727,6 +750,7 @@ void search_books_page(User* user) {
         int type_padding = std::max(0, type_width - (int)typeStr.length());
         int publisher_padding = std::max(0, publisher_width - (int)publisher.length());
         int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
+        int borrower_padding = std::max(0, borrower_width - (int)borrowerId.length());
         
         // 创建格式化的条目字符串
         std::string entry = 
@@ -736,7 +760,8 @@ void search_books_page(User* user) {
             typeStr + std::string(type_padding, ' ') + " | " +
             publisher + std::string(publisher_padding, ' ') + " | " +
             isbn + std::string(isbn_padding, ' ') + " | " +
-            (b.getIsAvailable() ? "可借阅" : "已借出");
+            (b.getIsAvailable() ? "可借阅" : "已借出") + " | " +
+            borrowerId + std::string(borrower_padding, ' ');
             
         return entry;
     };
@@ -813,7 +838,9 @@ void search_books_page(User* user) {
             text(" | "),
             text("ISBN") | size(WIDTH, EQUAL, 15),
             text(" | "),
-            text("状态") | size(WIDTH, EQUAL, 8)
+            text("状态") | size(WIDTH, EQUAL, 8),
+            text(" | "),
+            text("借阅者") | size(WIDTH, EQUAL, 8)
         }) | bold;
         
         // 根据焦点状态选择不同的边框风格和文本
