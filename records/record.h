@@ -45,6 +45,9 @@ public:
     // 判断是否已归还
     bool isReturned() const;
     
+    // 判断图书是否已归还（检查所有记录）
+    static bool isBookReturned(int bookID, const std::vector<record>& records);
+    
     // 设置归还时间（用于归还图书）
     void returnBook();
     

@@ -347,6 +347,20 @@ bool record::hasUserReturnedAllBooks(int userID, const std::vector<record>& reco
     return !userRecords.empty();
 }
 
+// 判断图书是否已归还（检查所有记录）
+bool record::isBookReturned(int bookID, const std::vector<record>& records) {
+    // 检查所有与该bookID相关的记录
+    for (const auto& rec : records) {
+        if (rec.getBookID() == bookID && !rec.isReturned()) {
+            // 如果找到了未归还的记录，说明这本书未归还
+            return false;
+        }
+    }
+    
+    // 如果没有找到未归还的记录，说明这本书已归还（或没有借阅记录）
+    return true;
+}
+
 // 格式化显示时间
 std::string record::formatTime(time_t time) {
     if (time == 0) {

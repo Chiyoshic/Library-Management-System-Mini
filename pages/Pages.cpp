@@ -714,11 +714,16 @@ void search_books_page(User* user) {
             try {
                 bookIdInt = std::stoi(b.getBookId());
                 
-                // 查找是否有未归还的借阅记录
-                for (const auto& rec : all_records) {
-                    if (rec.getBookID() == bookIdInt && !rec.isReturned()) {
-                        borrowerId = std::to_string(rec.getBorrowerID());
-                        break;
+                // 使用新方法检查图书是否已归还
+                bool isReturned = record::isBookReturned(bookIdInt, all_records);
+                
+                // 如果图书未归还，找出借阅者
+                if (!isReturned) {
+                    for (const auto& rec : all_records) {
+                        if (rec.getBookID() == bookIdInt && !rec.isReturned()) {
+                            borrowerId = std::to_string(rec.getBorrowerID());
+                            break;
+                        }
                     }
                 }
             } catch (const std::exception& e) {
