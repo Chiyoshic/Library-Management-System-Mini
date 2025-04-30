@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <map>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -103,6 +104,12 @@ public:
     
     // 打印记录信息
     void printRecord() const;
+
+    // 统计书籍借阅次数（从记录集合）
+    static std::map<int, int> getBookBorrowCounts(const std::vector<record>& records);
+    
+    // 统计书籍借阅次数（从文件）
+    static std::map<int, int> getBookBorrowCountsFromFile(const std::string& filename);
 };
 
 #endif //RECORD_H

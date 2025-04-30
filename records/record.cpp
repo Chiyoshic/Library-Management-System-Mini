@@ -367,3 +367,29 @@ void record::printRecord() const {
     std::cout << "归还时间: " << formatTime(returnTime) << std::endl;
     std::cout << "状态: " << (isReturned() ? "已归还" : "未归还") << std::endl;
 }
+
+// 统计书籍借阅次数（从记录集合）
+std::map<int, int> record::getBookBorrowCounts(const std::vector<record>& records) {
+    std::map<int, int> borrowCounts;
+    
+    for (const auto& rec : records) {
+        int bookID = rec.getBookID();
+        // 如果书本ID已存在于map中，增加计数；否则初始化为1
+        if (borrowCounts.find(bookID) != borrowCounts.end()) {
+            borrowCounts[bookID]++;
+        } else {
+            borrowCounts[bookID] = 1;
+        }
+    }
+    
+    return borrowCounts;
+}
+
+// 统计书籍借阅次数（从文件）
+std::map<int, int> record::getBookBorrowCountsFromFile(const std::string& filename) {
+    // 从文件读取所有记录
+    std::vector<record> records = readFromFile(filename);
+    
+    // 使用已实现的方法统计借阅次数
+    return getBookBorrowCounts(records);
+}
