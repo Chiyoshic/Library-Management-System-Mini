@@ -281,6 +281,15 @@ std::vector<record> record::getUserRecords(int userID, const std::vector<record>
     return userRecords;
 }
 
+// 从文件中获取用户的所有借阅记录
+std::vector<record> record::getUserRecordsFromFile(int userID, const std::string& filename) {
+    // 从文件读取所有记录
+    std::vector<record> records = readFromFile(filename);
+    
+    // 使用已实现的方法筛选用户记录
+    return getUserRecords(userID, records);
+}
+
 // 获取图书的所有借阅记录
 std::vector<record> record::getBookRecords(int bookID, const std::vector<record>& records) {
     std::vector<record> bookRecords;

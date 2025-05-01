@@ -87,6 +87,9 @@ public:
     // 获取用户的所有借阅记录
     static std::vector<record> getUserRecords(int userID, const std::vector<record>& records);
     
+    // 从文件中获取用户的所有借阅记录
+    static std::vector<record> getUserRecordsFromFile(int userID, const std::string& filename);
+    
     // 获取图书的所有借阅记录
     static std::vector<record> getBookRecords(int bookID, const std::vector<record>& records);
     
