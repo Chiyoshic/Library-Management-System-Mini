@@ -44,6 +44,7 @@ void manage_books_page(User* user);
 void student_register_page();
 void add_book_page(User* user);
 void view_stats_page(User* user);  // Forward declaration
+void my_borrows_page(User* user);  // Forward declaration
 
 void add_book_page(User* user) {
     clearScreen();
@@ -486,9 +487,11 @@ void student_dashboard_page(User* user) {
         search_books_page(user);
     });
     
-    auto my_borrows_button = Button("我的借阅", [] {
-        // 我的借阅功能待实现
-        std::cout << "查看我的借阅记录" << std::endl;
+    auto my_borrows_button = Button("我的借阅", [&] {
+        // 调用我的借阅页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        my_borrows_page(user);
     });
     
     auto account_button = Button("账户信息", [] {
@@ -521,6 +524,202 @@ void student_dashboard_page(User* user) {
         });
     });
     
+    screen.Loop(renderer);
+}
+
+void my_borrows_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 获取用户的借阅记录
+    std::vector<record> user_records = record::getUserRecordsFromFile(
+        user->getId(), 
+        "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json"
+    );
+
+    // 加载所有图书信息，用于显示图书详情
+    std::vector<book> all_books = book::loadAllBooks();
+    std::map<std::string, book> books_map;
+    
+    // 创建图书ID到图书对象的映射
+    for (const auto& b : all_books) {
+        books_map[b.getBookId()] = b;
+    }
+
+    // 借阅期限（15天，转换为秒）
+    const time_t BORROW_PERIOD = 15 * 24 * 60 * 60;
+    
+    // 为每条记录准备显示项
+    std::vector<std::string> borrow_entries;
+    
+    for (const auto& rec : user_records) {
+        // 获取图书信息
+        std::string bookId = std::to_string(rec.getBookID());
+        std::string bookTitle = "未知图书";
+        std::string bookAuthor = "";
+        
+        // 查找图书详情
+        if (books_map.find(bookId) != books_map.end()) {
+            bookTitle = books_map[bookId].getTitle();
+            bookAuthor = books_map[bookId].getAuthor();
+        }
+        
+        // 计算应归还日期
+        time_t due_date = rec.getBorrowTime() + BORROW_PERIOD;
+        
+        // 格式化显示时间
+        std::string borrowTimeStr = record::formatTime(rec.getBorrowTime());
+        std::string dueTimeStr = record::formatTime(due_date);
+        std::string returnTimeStr = rec.isReturned() ? record::formatTime(rec.getReturnTime()) : "未归还";
+        
+        // 计算状态
+        std::string status;
+        if (rec.isReturned()) {
+            status = "已归还";
+        } else if (rec.isOverdue()) {
+            status = "逾期未还";
+        } else {
+            status = "借阅中";
+        }
+        
+        // 逾期天数
+        std::string overdueDays = "";
+        if (rec.getOverdueDays() > 0) {
+            overdueDays = "逾期" + std::to_string(rec.getOverdueDays()) + "天";
+        }
+        
+        // 固定宽度以防止溢出
+        const int id_width = 8;
+        const int title_width = 20;
+        const int author_width = 15;
+        const int borrow_time_width = 20;
+        const int due_time_width = 20;
+        const int return_time_width = 20;
+        const int status_width = 10;
+        
+        // 截断过长的字符串并确保填充宽度不为负数
+        std::string id = bookId.substr(0, id_width);
+        std::string title = bookTitle.substr(0, title_width);
+        std::string author = bookAuthor.substr(0, author_width);
+        
+        // 添加空格填充至固定宽度
+        int id_padding = std::max(0, id_width - (int)id.length());
+        int title_padding = std::max(0, title_width - (int)title.length());
+        int author_padding = std::max(0, author_width - (int)author.length());
+        int borrow_time_padding = std::max(0, borrow_time_width - (int)borrowTimeStr.length());
+        int due_time_padding = std::max(0, due_time_width - (int)dueTimeStr.length());
+        int return_time_padding = std::max(0, return_time_width - (int)returnTimeStr.length());
+        int status_padding = std::max(0, status_width - (int)status.length());
+        
+        // 创建格式化的条目字符串
+        std::string entry = 
+            id + std::string(id_padding, ' ') + " | " +
+            title + std::string(title_padding, ' ') + " | " +
+            author + std::string(author_padding, ' ') + " | " +
+            borrowTimeStr + std::string(borrow_time_padding, ' ') + " | " +
+            dueTimeStr + std::string(due_time_padding, ' ') + " | " +
+            returnTimeStr + std::string(return_time_padding, ' ') + " | " +
+            status + std::string(status_padding, ' ') + (overdueDays.empty() ? "" : " | " + overdueDays);
+            
+        borrow_entries.push_back(entry);
+    }
+
+    // 创建菜单组件，用于显示和选择借阅记录
+    int borrow_menu_selected = 0;
+    auto borrow_menu = Menu(&borrow_entries, &borrow_menu_selected);
+    
+    // 创建自定义菜单渲染器，以便对逾期的记录使用红色显示
+    auto borrow_menu_renderer = Renderer(borrow_menu, [&] {
+        Elements elements;
+        int index = 0;
+        for (const auto& rec : user_records) {
+            Element e = text(borrow_entries[index]);
+            
+            // 如果未归还且逾期，显示为红色
+            if (!rec.isReturned() && rec.isOverdue()) {
+                e = e | color(Color::Red);
+            } else if (rec.isReturned() && rec.isOverdue()) {
+                // 已归还但曾经逾期，显示为黄色
+                e = e | color(Color::Yellow);
+            }
+            
+            // 如果是被选中的项目，添加高亮
+            if (index == borrow_menu_selected) {
+                e = e | bgcolor(Color::Blue);
+            }
+            
+            elements.push_back(e);
+            index++;
+        }
+        return vbox(elements) | frame;
+    });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        student_dashboard_page(user);
+    });
+    
+    // 主容器
+    auto container = Container::Vertical({
+        borrow_menu,
+        back_button
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        // 表头
+        Element header = hbox({
+            text("图书ID") | size(WIDTH, EQUAL, 8) | bold,
+            text(" | "),
+            text("图书标题") | size(WIDTH, EQUAL, 20) | bold,
+            text(" | "),
+            text("作者") | size(WIDTH, EQUAL, 15) | bold,
+            text(" | "),
+            text("借阅时间") | size(WIDTH, EQUAL, 20) | bold,
+            text(" | "),
+            text("应归还时间") | size(WIDTH, EQUAL, 20) | bold,
+            text(" | "),
+            text("实际归还时间") | size(WIDTH, EQUAL, 20) | bold,
+            text(" | "),
+            text("状态") | size(WIDTH, EQUAL, 10) | bold,
+            text(" | "),
+            text("逾期信息") | size(WIDTH, EQUAL, 10) | bold
+        });
+        
+        // 创建说明文本
+        Elements legendElements;
+        legendElements.push_back(text("图例：") | bold);
+        legendElements.push_back(text("普通文本 - 正常借阅") | color(Color::White));
+        legendElements.push_back(text("红色文本 - 当前逾期未还") | color(Color::Red));
+        legendElements.push_back(text("黄色文本 - 已归还但曾经逾期") | color(Color::Yellow));
+        
+        return vbox({
+            text("我的借阅记录") | bold | hcenter,
+            text("用户: " + user->getName()) | hcenter,
+            vbox(legendElements) | hcenter,
+            separator(),
+            
+            user_records.empty() 
+                ? vbox({
+                    text("你还没有借阅记录") | hcenter,
+                    separator()
+                  })
+                : vbox({
+                    header,
+                    separator(),
+                    borrow_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 15)
+                  }) | border,
+            
+            separator(),
+            back_button->Render() | hcenter
+        });
+    });
+    
+    // 启动交互循环
     screen.Loop(renderer);
 }
 
