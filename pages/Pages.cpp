@@ -384,18 +384,12 @@ void admin_dashboard_page(User* user) {
         view_stats_page(user);
     });
     
-    auto query_borrows_button = Button("查询借阅", [] {
-        // 查询借阅功能待实现
-        std::cout << "查询借阅信息" << std::endl;
-    });
-    
     auto logout_button = Button("退出登录", screen.ExitLoopClosure());
     
     auto container = Container::Vertical({
         manage_books_button,
         manage_users_button,
         view_stats_button,
-        query_borrows_button,
         logout_button
     });
     
@@ -409,7 +403,6 @@ void admin_dashboard_page(User* user) {
                 manage_books_button->Render(),
                 manage_users_button->Render(),
                 view_stats_button->Render(),
-                query_borrows_button->Render(),
                 separator(),
                 logout_button->Render(),
             }) | border,
@@ -692,7 +685,7 @@ void search_books_page(User* user) {
     std::vector<std::string> books_entries;
     
     // 创建图书项目的显示项
-    auto createBookEntry = [&all_records](const book& b) -> std::string {
+    auto createBookEntry = [&all_records, user](const book& b) -> std::string {
         // 将书籍类型转换为字符串
         std::string typeStr;
         switch(b.getBookType()) {
@@ -757,17 +750,32 @@ void search_books_page(User* user) {
         int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
         int borrower_padding = std::max(0, borrower_width - (int)borrowerId.length());
         
-        // 创建格式化的条目字符串
-        std::string entry = 
-            id + std::string(id_padding, ' ') + " | " +
-            title + std::string(title_padding, ' ') + " | " +
-            author + std::string(author_padding, ' ') + " | " +
-            typeStr + std::string(type_padding, ' ') + " | " +
-            publisher + std::string(publisher_padding, ' ') + " | " +
-            isbn + std::string(isbn_padding, ' ') + " | " +
-            (b.getIsAvailable() ? "可借阅" : "已借出") + " | " +
-            borrowerId + std::string(borrower_padding, ' ');
-            
+        // 根据用户角色创建不同的条目字符串
+        std::string entry;
+        
+        if (user->getRole() == User::ADMIN) {
+            // 管理员可以看到借阅者信息
+            entry = 
+                id + std::string(id_padding, ' ') + " | " +
+                title + std::string(title_padding, ' ') + " | " +
+                author + std::string(author_padding, ' ') + " | " +
+                typeStr + std::string(type_padding, ' ') + " | " +
+                publisher + std::string(publisher_padding, ' ') + " | " +
+                isbn + std::string(isbn_padding, ' ') + " | " +
+                (b.getIsAvailable() ? "可借阅" : "已借出") + " | " +
+                borrowerId + std::string(borrower_padding, ' ');
+        } else {
+            // 学生用户看不到借阅者信息
+            entry = 
+                id + std::string(id_padding, ' ') + " | " +
+                title + std::string(title_padding, ' ') + " | " +
+                author + std::string(author_padding, ' ') + " | " +
+                typeStr + std::string(type_padding, ' ') + " | " +
+                publisher + std::string(publisher_padding, ' ') + " | " +
+                isbn + std::string(isbn_padding, ' ') + " | " +
+                (b.getIsAvailable() ? "可借阅" : "已借出");
+        }
+        
         return entry;
     };
     
@@ -829,24 +837,45 @@ void search_books_page(User* user) {
     
     // 渲染器
     auto renderer = Renderer(main_container, [&] {
-        // 表头
-        Element header = hbox({
-            text("ID") | size(WIDTH, EQUAL, 8),
-            text(" | "),
-            text("标题") | size(WIDTH, EQUAL, 20),
-            text(" | "),
-            text("作者") | size(WIDTH, EQUAL, 15),
-            text(" | "),
-            text("类型") | size(WIDTH, EQUAL, 12),
-            text(" | "),
-            text("出版社") | size(WIDTH, EQUAL, 15),
-            text(" | "),
-            text("ISBN") | size(WIDTH, EQUAL, 15),
-            text(" | "),
-            text("状态") | size(WIDTH, EQUAL, 8),
-            text(" | "),
-            text("借阅者") | size(WIDTH, EQUAL, 8)
-        }) | bold;
+        // 表头 - 根据用户角色显示不同的表头
+        Element header;
+        if (user->getRole() == User::ADMIN) {
+            // 管理员表头包含借阅者列
+            header = hbox({
+                text("ID") | size(WIDTH, EQUAL, 8),
+                text(" | "),
+                text("标题") | size(WIDTH, EQUAL, 20),
+                text(" | "),
+                text("作者") | size(WIDTH, EQUAL, 15),
+                text(" | "),
+                text("类型") | size(WIDTH, EQUAL, 12),
+                text(" | "),
+                text("出版社") | size(WIDTH, EQUAL, 15),
+                text(" | "),
+                text("ISBN") | size(WIDTH, EQUAL, 15),
+                text(" | "),
+                text("状态") | size(WIDTH, EQUAL, 8),
+                text(" | "),
+                text("借阅者") | size(WIDTH, EQUAL, 8)
+            }) | bold;
+        } else {
+            // 学生表头不显示借阅者列
+            header = hbox({
+                text("ID") | size(WIDTH, EQUAL, 8),
+                text(" | "),
+                text("标题") | size(WIDTH, EQUAL, 20),
+                text(" | "),
+                text("作者") | size(WIDTH, EQUAL, 15),
+                text(" | "),
+                text("类型") | size(WIDTH, EQUAL, 12),
+                text(" | "),
+                text("出版社") | size(WIDTH, EQUAL, 15),
+                text(" | "),
+                text("ISBN") | size(WIDTH, EQUAL, 15),
+                text(" | "),
+                text("状态") | size(WIDTH, EQUAL, 8)
+            }) | bold;
+        }
         
         // 根据焦点状态选择不同的边框风格和文本
         std::string books_title = books_area_focused ? "所有图书 [已选中]" : "所有图书";
