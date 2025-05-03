@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <sstream>
 #include "nlohmann/json.hpp"
+#include "../books/book.h" // Added include for book class
 
 // 默认构造函数
 record::record() : borrowerID(0), bookID(0), borrowTime(0), returnTime(0) {}
@@ -168,11 +169,18 @@ json record::toJson() const {
 
 // JSON反序列化
 record record::fromJson(const json& j) {
-    return record(
+    record rec(
         j["borrowerID"].get<int>(),
         j["bookID"].get<int>(),
         j["borrowTime"].get<time_t>()
     );
+    
+    // Check if returnTime exists in the JSON and set it
+    if (j.contains("returnTime")) {
+        rec.setReturnTime(j["returnTime"].get<time_t>());
+    }
+    
+    return rec;
 }
 
 // 从JSON文件读取所有记录
@@ -228,6 +236,17 @@ void record::addBorrowRecord(int borrowerID, int bookID, const std::string& file
         return;
     }
     
+    // 找到图书并更新其可用性
+    std::string bookIdStr = std::to_string(bookID);
+    book* borrowedBook = book::findBookById(bookIdStr);
+    if (borrowedBook != nullptr) {
+        borrowedBook->setIsAvailable(false);
+        book::updateBook(*borrowedBook);
+    } else {
+        std::cerr << "找不到ID为" << bookID << "的图书" << std::endl;
+        return;
+    }
+    
     // 创建新记录
     record newRecord(borrowerID, bookID, time(nullptr));
     records.push_back(newRecord);
@@ -259,6 +278,16 @@ bool record::addReturnRecord(int borrowerID, int bookID, const std::string& file
     if (!found) {
         std::cerr << "未找到该用户的此图书未归还记录" << std::endl;
         return false;
+    }
+    
+    // 更新图书可用性
+    std::string bookIdStr = std::to_string(bookID);
+    book* returnedBook = book::findBookById(bookIdStr);
+    if (returnedBook != nullptr) {
+        returnedBook->setIsAvailable(true);
+        book::updateBook(*returnedBook);
+    } else {
+        std::cerr << "找不到ID为" << bookID << "的图书" << std::endl;
     }
     
     // 保存更新后的记录
