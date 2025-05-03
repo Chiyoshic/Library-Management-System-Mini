@@ -48,7 +48,7 @@
     "author": "J.K. Rowling",
     "bookId": "6",
     "bookType": "FANTASY",
-    "isAvailable": true,
+    "isAvailable": false,
     "isbn": "9780590353427",
     "publisher": "Scholastic",
     "title": "Harry Potter and the Sorcerer's Stone"

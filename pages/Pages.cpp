@@ -45,6 +45,7 @@ void student_register_page();
 void add_book_page(User* user);
 void view_stats_page(User* user);  // Forward declaration
 void my_borrows_page(User* user);  // Forward declaration
+void borrow_return_page(User* user); // Forward declaration
 
 void add_book_page(User* user) {
     clearScreen();
@@ -494,9 +495,11 @@ void student_dashboard_page(User* user) {
         my_borrows_page(user);
     });
     
-    auto account_button = Button("账户信息", [] {
-        // 账户信息功能待实现
-        std::cout << "查看账户信息" << std::endl;
+    auto borrow_return_button = Button("借书还书", [&] {
+        // 调用借书还书页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        borrow_return_page(user);
     });
     
     auto logout_button = Button("退出登录", screen.ExitLoopClosure());
@@ -504,7 +507,7 @@ void student_dashboard_page(User* user) {
     auto container = Container::Vertical({
         search_books_button,
         my_borrows_button,
-        account_button,
+        borrow_return_button,
         logout_button
     });
     
@@ -517,7 +520,7 @@ void student_dashboard_page(User* user) {
             vbox({
                 search_books_button->Render(),
                 my_borrows_button->Render(),
-                account_button->Render(),
+                borrow_return_button->Render(),
                 separator(),
                 logout_button->Render(),
             }) | border,
@@ -721,6 +724,421 @@ void my_borrows_page(User* user) {
     
     // 启动交互循环
     screen.Loop(renderer);
+}
+
+void borrow_return_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 变量定义
+    std::string book_id;                // 图书ID输入
+    std::string operation_message;      // 操作结果消息
+    bool show_error = false;            // 是否显示错误
+    bool show_success = false;          // 是否显示成功信息
+    bool show_book_info = false;        // 是否显示图书信息
+    book current_book;                  // 当前查询/操作的图书
+    record current_record;              // 当前查询/操作的借阅记录
+    bool is_borrowed = false;           // 图书是否已被借出
+    int current_borrower_id = 0;        // 当前借阅者ID
+    time_t borrow_time = 0;             // 借阅时间
+    time_t due_time = 0;                // 应归还时间
+    int overdue_days = 0;               // 逾期天数
+    
+    // 创建输入框
+    auto id_input = Input(&book_id, "输入图书ID") | size(WIDTH, EQUAL, 30);
+    
+    // 创建按钮
+    bool borrow_clicked = false;
+    auto borrow_button = Button("借书", [&] { borrow_clicked = true; });
+    
+    bool return_clicked = false;
+    auto return_button = Button("还书", [&] { return_clicked = true; });
+    
+    bool query_clicked = false;
+    auto query_button = Button("查询", [&] { query_clicked = true; });
+    
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        student_dashboard_page(user);
+    });
+    
+    // 主容器
+    auto container = Container::Vertical({
+        id_input,
+        Container::Horizontal({
+            borrow_button,
+            return_button,
+            query_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        Elements elements;
+        
+        // 页面标题和用户信息
+        elements.push_back(text("借书还书") | bold | hcenter);
+        elements.push_back(text("用户: " + user->getName()) | hcenter);
+        elements.push_back(separator());
+        
+        // 输入区域
+        elements.push_back(vbox({
+            hbox(text("图书ID: "), id_input->Render()) | hcenter,
+            separator(),
+            hbox(
+                borrow_button->Render(),
+                text(" "),
+                return_button->Render(),
+                text(" "),
+                query_button->Render(),
+                text(" "),
+                back_button->Render()
+            ) | hcenter,
+        }) | border);
+        
+        // 操作结果消息
+        if (show_error) {
+            elements.push_back(text(operation_message) | color(Color::Red) | hcenter);
+        } else if (show_success) {
+            elements.push_back(text(operation_message) | color(Color::Green) | hcenter);
+        }
+        
+        // 显示图书信息（如果有）
+        if (show_book_info) {
+            // 将图书类型转换为中文字符串
+            std::string bookTypeStr = "未知";
+            switch(current_book.getBookType()) {
+                case book::FICTION: bookTypeStr = "小说"; break;
+                case book::NON_FICTION: bookTypeStr = "非小说"; break;
+                case book::SCIENCE: bookTypeStr = "科学"; break;
+                case book::HISTORY: bookTypeStr = "历史"; break;
+                case book::BIOGRAPHY: bookTypeStr = "传记"; break;
+                case book::FANTASY: bookTypeStr = "奇幻"; break;
+                case book::MYSTERY: bookTypeStr = "悬疑"; break;
+                case book::ROMANCE: bookTypeStr = "爱情"; break;
+            }
+            
+            Elements book_info_elements;
+            
+            // 图书基本信息
+            book_info_elements.push_back(text("图书信息") | bold | hcenter);
+            book_info_elements.push_back(text("ID: " + current_book.getBookId()));
+            book_info_elements.push_back(text("标题: " + current_book.getTitle()));
+            book_info_elements.push_back(text("作者: " + current_book.getAuthor()));
+            book_info_elements.push_back(text("出版社: " + current_book.getPublisher()));
+            book_info_elements.push_back(text("ISBN: " + current_book.getIsbn()));
+            book_info_elements.push_back(text("类型: " + bookTypeStr));
+            
+            // 借阅状态
+            book_info_elements.push_back(separator());
+            book_info_elements.push_back(text("借阅状态") | bold | hcenter);
+            
+            if (is_borrowed) {
+                // 显示借阅信息
+                book_info_elements.push_back(text("状态: 已借出") | color(Color::Red));
+                book_info_elements.push_back(text("借阅者ID: " + std::to_string(current_borrower_id)));
+                book_info_elements.push_back(text("借阅日期: " + record::formatTime(borrow_time)));
+                book_info_elements.push_back(text("应还日期: " + record::formatTime(due_time)));
+                
+                if (overdue_days > 0) {
+                    // 如果已经逾期，显示逾期天数
+                    book_info_elements.push_back(text("逾期: " + std::to_string(overdue_days) + "天") | color(Color::Red));
+                }
+            } else {
+                // 显示可借阅状态
+                book_info_elements.push_back(text("状态: 可借阅") | color(Color::Green));
+            }
+            
+            // 添加图书信息到主元素列表
+            elements.push_back(vbox(book_info_elements) | border);
+        }
+        
+        return vbox(elements);
+    });
+    
+    // 事件处理函数
+    auto event_handler = CatchEvent(renderer, [&](Event event) {
+        // 借书按钮点击
+        if (borrow_clicked) {
+            borrow_clicked = false;
+            
+            // 重置显示状态
+            show_error = false;
+            show_success = false;
+            show_book_info = false;
+            
+            // 检查输入是否为空
+            if (book_id.empty()) {
+                show_error = true;
+                operation_message = "请输入图书ID";
+                return true;
+            }
+            
+            // 查找图书
+            book* bookToBorrow = book::findBookById(book_id);
+            if (!bookToBorrow) {
+                show_error = true;
+                operation_message = "未找到ID为 " + book_id + " 的图书";
+                return true;
+            }
+            
+            // 保存当前图书信息用于显示
+            current_book = *bookToBorrow;
+            show_book_info = true;
+            
+            // 检查图书是否可借阅
+            if (!bookToBorrow->getIsAvailable()) {
+                // 读取所有记录，查看是否真的被借出（避免状态不一致）
+                std::vector<record> all_records = record::readFromFile(
+                    "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+                
+                try {
+                    int bookIDInt = std::stoi(book_id);
+                    if (record::isBookBorrowed(bookIDInt, all_records)) {
+                        show_error = true;
+                        operation_message = "该图书已被借出";
+                        
+                        // 查找当前借阅者信息
+                        for (const auto& rec : all_records) {
+                            if (rec.getBookID() == bookIDInt && !rec.isReturned()) {
+                                current_borrower_id = rec.getBorrowerID();
+                                borrow_time = rec.getBorrowTime();
+                                due_time = borrow_time + (15 * 24 * 60 * 60); // 15天转为秒
+                                is_borrowed = true;
+                                
+                                // 计算逾期天数
+                                overdue_days = rec.getOverdueDays();
+                                break;
+                            }
+                        }
+                        return true;
+                    }
+                } catch (const std::exception& e) {
+                    show_error = true;
+                    operation_message = "图书ID格式错误";
+                    return true;
+                }
+            }
+            
+            // 执行借书操作
+            try {
+                int bookIDInt = std::stoi(book_id);
+                int userIDInt = user->getId();
+                
+                // 添加借阅记录
+                record::addBorrowRecord(
+                    userIDInt, 
+                    bookIDInt, 
+                    "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json"
+                );
+                
+                // 更新图书状态为已借出
+                bookToBorrow->setIsAvailable(false);
+                book::updateBook(*bookToBorrow);
+                
+                // 更新显示状态
+                show_success = true;
+                operation_message = "借书成功";
+                
+                // 更新当前图书信息用于显示
+                current_book = *bookToBorrow;
+                is_borrowed = true;
+                current_borrower_id = userIDInt;
+                borrow_time = time(nullptr);
+                due_time = borrow_time + (15 * 24 * 60 * 60); // 15天转为秒
+                
+            } catch (const std::exception& e) {
+                show_error = true;
+                operation_message = "借书失败: " + std::string(e.what());
+            }
+            
+            return true;
+        }
+        
+        // 还书按钮点击
+        if (return_clicked) {
+            return_clicked = false;
+            
+            // 重置显示状态
+            show_error = false;
+            show_success = false;
+            show_book_info = false;
+            
+            // 检查输入是否为空
+            if (book_id.empty()) {
+                show_error = true;
+                operation_message = "请输入图书ID";
+                return true;
+            }
+            
+            // 查找图书
+            book* bookToReturn = book::findBookById(book_id);
+            if (!bookToReturn) {
+                show_error = true;
+                operation_message = "未找到ID为 " + book_id + " 的图书";
+                return true;
+            }
+            
+            // 保存当前图书信息用于显示
+            current_book = *bookToReturn;
+            show_book_info = true;
+            
+            // 检查用户是否真的借了这本书
+            try {
+                int bookIDInt = std::stoi(book_id);
+                int userIDInt = user->getId();
+                
+                // 读取所有记录
+                std::vector<record> all_records = record::readFromFile(
+                    "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+                
+                // 检查用户是否借了这本书
+                if (!record::hasUserBorrowedBook(userIDInt, bookIDInt, all_records)) {
+                    show_error = true;
+                    operation_message = "您没有借阅这本书，无法归还";
+                    
+                    // 查找当前真实借阅状态
+                    if (!record::isBookReturned(bookIDInt, all_records)) {
+                        // 书确实被借出，但不是这个用户借的
+                        for (const auto& rec : all_records) {
+                            if (rec.getBookID() == bookIDInt && !rec.isReturned()) {
+                                is_borrowed = true;
+                                current_borrower_id = rec.getBorrowerID();
+                                borrow_time = rec.getBorrowTime();
+                                due_time = borrow_time + (15 * 24 * 60 * 60); // 15天转为秒
+                                overdue_days = rec.getOverdueDays();
+                                break;
+                            }
+                        }
+                    } else {
+                        // 图书实际上已归还，但系统状态不一致
+                        is_borrowed = false;
+                        // 更新图书状态
+                        if (!bookToReturn->getIsAvailable()) {
+                            bookToReturn->setIsAvailable(true);
+                            book::updateBook(*bookToReturn);
+                        }
+                    }
+                    
+                    return true;
+                }
+                
+                // 执行还书操作
+                bool success = record::addReturnRecord(
+                    userIDInt, 
+                    bookIDInt, 
+                    "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json"
+                );
+                
+                if (success) {
+                    // 更新图书状态为可借
+                    bookToReturn->setIsAvailable(true);
+                    book::updateBook(*bookToReturn);
+                    
+                    // 更新显示状态
+                    show_success = true;
+                    operation_message = "还书成功";
+                    is_borrowed = false;
+                } else {
+                    show_error = true;
+                    operation_message = "还书失败，可能是系统错误";
+                }
+                
+            } catch (const std::exception& e) {
+                show_error = true;
+                operation_message = "还书失败: " + std::string(e.what());
+            }
+            
+            return true;
+        }
+        
+        // 查询按钮点击
+        if (query_clicked) {
+            query_clicked = false;
+            
+            // 重置显示状态
+            show_error = false;
+            show_success = false;
+            show_book_info = false;
+            
+            // 检查输入是否为空
+            if (book_id.empty()) {
+                show_error = true;
+                operation_message = "请输入图书ID";
+                return true;
+            }
+            
+            // 查找图书
+            book* bookToQuery = book::findBookById(book_id);
+            if (!bookToQuery) {
+                show_error = true;
+                operation_message = "未找到ID为 " + book_id + " 的图书";
+                return true;
+            }
+            
+            // 保存当前图书信息用于显示
+            current_book = *bookToQuery;
+            show_book_info = true;
+            
+            try {
+                int bookIDInt = std::stoi(book_id);
+                
+                // 读取所有记录
+                std::vector<record> all_records = record::readFromFile(
+                    "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+                
+                // 检查图书是否已被借出
+                if (record::isBookBorrowed(bookIDInt, all_records)) {
+                    // 查找借阅者信息
+                    for (const auto& rec : all_records) {
+                        if (rec.getBookID() == bookIDInt && !rec.isReturned()) {
+                            is_borrowed = true;
+                            current_borrower_id = rec.getBorrowerID();
+                            borrow_time = rec.getBorrowTime();
+                            due_time = borrow_time + (15 * 24 * 60 * 60); // 15天转为秒
+                            overdue_days = rec.getOverdueDays();
+                            break;
+                        }
+                    }
+                    
+                    // 确保图书状态一致
+                    if (bookToQuery->getIsAvailable()) {
+                        bookToQuery->setIsAvailable(false);
+                        book::updateBook(*bookToQuery);
+                        current_book = *bookToQuery;
+                    }
+                } else {
+                    is_borrowed = false;
+                    
+                    // 确保图书状态一致
+                    if (!bookToQuery->getIsAvailable()) {
+                        bookToQuery->setIsAvailable(true);
+                        book::updateBook(*bookToQuery);
+                        current_book = *bookToQuery;
+                    }
+                }
+                
+                // 更新显示状态
+                show_success = true;
+                operation_message = "查询成功";
+                
+            } catch (const std::exception& e) {
+                show_error = true;
+                operation_message = "查询失败: " + std::string(e.what());
+            }
+            
+            return true;
+        }
+        
+        return false;
+    });
+    
+    // 启动交互循环
+    screen.Loop(event_handler);
 }
 
 void student_register_page() {
