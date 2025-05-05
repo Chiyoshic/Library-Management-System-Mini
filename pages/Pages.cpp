@@ -1754,6 +1754,9 @@ void manage_users_page(User* user) {
     };
     FocusArea current_focus = USER_LIST;
     
+    // Add boolean flag for password container visibility
+    bool password_area_visible = false;
+    
     // 加载所有图书标题，便于查询
     std::map<std::string, std::string> bookTitles;
     std::ifstream bookFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
@@ -2004,15 +2007,18 @@ void manage_users_page(User* user) {
     });
     
     // 使用合适的布局容器
-    auto main_container = Container::Horizontal({
-        users_menu,
-        Container::Vertical({
-            search_container
-        })
+    auto main_container = Container::Vertical({
+        Container::Horizontal({
+            users_menu,
+            Container::Vertical({
+                search_container
+            })
+        }),
+        password_container
     });
-    
-    // 渲染器
-    auto renderer = Renderer(main_container, [&] -> Element {
+
+    // 渲染器 - Fix lambda syntax by adding () 
+    auto renderer = Renderer(main_container, [&]() -> Element {
         // 表头
         Element header = hbox({
             text("用户ID") | size(WIDTH, EQUAL, 10),
@@ -2164,6 +2170,12 @@ void manage_users_page(User* user) {
                     }) | border,
                 }) | border
             );
+            
+            // Update visibility flag instead of calling Show()
+            password_area_visible = true;
+        } else {
+            // Update visibility flag instead of calling Hide()
+            password_area_visible = false;
         }
         
         return vbox(elements);
@@ -2237,9 +2249,10 @@ void manage_users_page(User* user) {
                 password_error = false;
                 password_success = false;
                 new_password.clear();
+                // Update visibility flag instead of calling Show()
+                password_area_visible = true;
                 // 将焦点设置到密码输入框
                 current_focus = PASSWORD_AREA;
-                password_container->TakeFocus();
                 password_input->TakeFocus();
                 return true;
             } else if (current_focus == SEARCH_AREA && has_searched && !search_results.empty()) {
@@ -2249,30 +2262,11 @@ void manage_users_page(User* user) {
                 password_error = false;
                 password_success = false;
                 new_password.clear();
+                // Update visibility flag instead of calling Show()
+                password_area_visible = true;
                 // 将焦点设置到密码输入框
                 current_focus = PASSWORD_AREA;
-                password_container->TakeFocus();
                 password_input->TakeFocus();
-                return true;
-            } else if (current_focus == PASSWORD_AREA && show_user_detail) {
-                // 如果在密码区域按回车，触发修改密码
-                if (!new_password.empty()) {
-                    bool success = User::adminChangeUserPassword(user->getId(), selected_user.getId(), new_password);
-                    if (success) {
-                        password_error = false;
-                        password_success = true;
-                        password_message = "密码修改成功";
-                        new_password.clear();  // 清空密码输入
-                    } else {
-                        password_error = true;
-                        password_success = false;
-                        password_message = "密码修改失败";
-                    }
-                } else {
-                    password_error = true;
-                    password_success = false;
-                    password_message = "密码不能为空";
-                }
                 return true;
             }
         }
@@ -2287,6 +2281,7 @@ void manage_users_page(User* user) {
                     id_input->TakeFocus();
                 } else if (current_focus == SEARCH_AREA) {
                     current_focus = PASSWORD_AREA;
+                    // Explicitly focus on password container and its input
                     password_container->TakeFocus();
                     password_input->TakeFocus();
                 } else { // PASSWORD_AREA
