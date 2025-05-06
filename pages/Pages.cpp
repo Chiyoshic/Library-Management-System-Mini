@@ -83,6 +83,10 @@ void add_book_page(User* user) {
     bool save_clicked = false;
     auto save_button = Button("保存", [&] { save_clicked = true; });
     
+    // 创建更新按钮
+    bool update_clicked = false;
+    auto update_button = Button("更新", [&] { update_clicked = true; });
+    
     // 创建返回按钮
     auto back_button = Button("返回", [&] {
         screen.ExitLoopClosure()();
@@ -100,6 +104,7 @@ void add_book_page(User* user) {
         type_menu,
         Container::Horizontal({
             save_button,
+            update_button,
             back_button
         })
     });
@@ -119,7 +124,7 @@ void add_book_page(User* user) {
                 show_error ? text(error_message) | color(Color::Red) | hcenter : text(""),
                 show_success ? text("图书录入成功！") | color(Color::Green) | hcenter : text(""),
                 separator(),
-                hbox(save_button->Render(), back_button->Render()) | hcenter,
+                hbox(save_button->Render(), text(" "), update_button->Render(), text(" "), back_button->Render()) | hcenter,
             }) | border,
         });
     });
@@ -187,6 +192,76 @@ void add_book_page(User* user) {
                 show_error = true;
                 show_success = false;
                 error_message = "保存失败，图书ID可能已存在";
+                return true;
+            }
+        }
+        
+        // 处理更新按钮点击事件
+        if (update_clicked) {
+            update_clicked = false;
+            
+            // 基本输入验证
+            if (book_id.empty() || title.empty() || author.empty() || 
+                publisher.empty() || isbn.empty()) {
+                show_error = true;
+                show_success = false;
+                error_message = "所有字段都不能为空";
+                return true;
+            }
+            
+            // 查找图书是否存在
+            book* existingBook = book::findBookById(book_id);
+            if (!existingBook) {
+                show_error = true;
+                show_success = false;
+                error_message = "未找到ID为" + book_id + "的图书，无法更新";
+                return true;
+            }
+            
+            // 创建更新后的图书对象
+            book updatedBook;
+            updatedBook.setBookId(book_id);
+            updatedBook.setTitle(title);
+            updatedBook.setAuthor(author);
+            updatedBook.setPublisher(publisher);
+            updatedBook.setIsbn(isbn);
+            
+            // 设置可用状态为原书的状态（保留）
+            updatedBook.setIsAvailable(existingBook->getIsAvailable());
+            
+            // 根据选择的类型设置书籍类型
+            book::type bookTypeEnum;
+            switch(type_selected) {
+                case 0: bookTypeEnum = book::FICTION; break;
+                case 1: bookTypeEnum = book::NON_FICTION; break;
+                case 2: bookTypeEnum = book::SCIENCE; break;
+                case 3: bookTypeEnum = book::HISTORY; break;
+                case 4: bookTypeEnum = book::BIOGRAPHY; break;
+                case 5: bookTypeEnum = book::FANTASY; break;
+                case 6: bookTypeEnum = book::MYSTERY; break;
+                case 7: bookTypeEnum = book::ROMANCE; break;
+                default: bookTypeEnum = book::FICTION; break;
+            }
+            updatedBook.setBookType(bookTypeEnum);
+            
+            // 调用book::updateBook方法更新图书
+            bool success = book::updateBook(updatedBook);
+            if (success) {
+                show_error = false;
+                show_success = true;
+                error_message = "";
+                
+                // 显示更新成功，并在短暂延迟后自动返回
+                std::thread([&screen]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+                    screen.ExitLoopClosure()();
+                }).detach();
+                
+                return true;
+            } else {
+                show_error = true;
+                show_success = false;
+                error_message = "更新失败，系统错误";
                 return true;
             }
         }
@@ -1302,9 +1377,12 @@ void search_books_page(User* user) {
             default: typeStr = "未知"; break;
         }
         
-        // 查找当前借阅者ID
+        // 查找当前借阅者ID和应还日期
         std::string borrowerId = "-";
-        if (!b.getIsAvailable()) {  // 只有当图书不可借阅时才显示借阅者ID
+        std::string dueDate = "-";
+        time_t borrowTime = 0;
+        
+        if (!b.getIsAvailable()) {  // 只有当图书不可借阅时才查询
             int bookIdInt;
             try {
                 bookIdInt = std::stoi(b.getBookId());
@@ -1312,11 +1390,16 @@ void search_books_page(User* user) {
                 // 使用新方法检查图书是否已归还
                 bool isReturned = record::isBookReturned(bookIdInt, all_records);
                 
-                // 如果图书未归还，找出借阅者
+                // 如果图书未归还，找出借阅者和借阅时间，计算应还日期
                 if (!isReturned) {
                     for (const auto& rec : all_records) {
                         if (rec.getBookID() == bookIdInt && !rec.isReturned()) {
                             borrowerId = std::to_string(rec.getBorrowerID());
+                            borrowTime = rec.getBorrowTime();
+                            
+                            // 计算应还日期（借阅时间+15天）
+                            time_t dueTime = borrowTime + (15 * 24 * 60 * 60); // 15天转为秒
+                            dueDate = record::formatTime(dueTime).substr(0, 10); // 只取日期部分
                             break;
                         }
                     }
@@ -1334,6 +1417,7 @@ void search_books_page(User* user) {
         const int publisher_width = 15;
         const int isbn_width = 15;
         const int borrower_width = 8;
+        const int due_date_width = 12;
         
         // 截断过长的字符串并确保填充宽度不为负数
         std::string id = b.getBookId().substr(0, id_width);
@@ -1351,12 +1435,13 @@ void search_books_page(User* user) {
         int publisher_padding = std::max(0, publisher_width - (int)publisher.length());
         int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
         int borrower_padding = std::max(0, borrower_width - (int)borrowerId.length());
+        int due_date_padding = std::max(0, due_date_width - (int)dueDate.length());
         
         // 根据用户角色创建不同的条目字符串
         std::string entry;
         
         if (user->getRole() == User::ADMIN) {
-            // 管理员可以看到借阅者信息
+            // 管理员可以看到借阅者信息和应还日期
             entry = 
                 id + std::string(id_padding, ' ') + " | " +
                 title + std::string(title_padding, ' ') + " | " +
@@ -1365,9 +1450,10 @@ void search_books_page(User* user) {
                 publisher + std::string(publisher_padding, ' ') + " | " +
                 isbn + std::string(isbn_padding, ' ') + " | " +
                 (b.getIsAvailable() ? "可借阅" : "已借出") + " | " +
-                borrowerId + std::string(borrower_padding, ' ');
+                borrowerId + std::string(borrower_padding, ' ') + " | " +
+                (!b.getIsAvailable() ? dueDate + std::string(due_date_padding, ' ') : "-" + std::string(due_date_width - 1, ' '));
         } else {
-            // 学生用户看不到借阅者信息
+            // 学生用户看不到借阅者信息和应还日期
             entry = 
                 id + std::string(id_padding, ' ') + " | " +
                 title + std::string(title_padding, ' ') + " | " +
@@ -1442,7 +1528,7 @@ void search_books_page(User* user) {
         // 表头 - 根据用户角色显示不同的表头
         Element header;
         if (user->getRole() == User::ADMIN) {
-            // 管理员表头包含借阅者列
+            // 管理员表头包含借阅者列和应还日期列
             header = hbox({
                 text("ID") | size(WIDTH, EQUAL, 8),
                 text(" | "),
@@ -1458,10 +1544,12 @@ void search_books_page(User* user) {
                 text(" | "),
                 text("状态") | size(WIDTH, EQUAL, 8),
                 text(" | "),
-                text("借阅者") | size(WIDTH, EQUAL, 8)
+                text("借阅者") | size(WIDTH, EQUAL, 8),
+                text(" | "),
+                text("应还日期") | size(WIDTH, EQUAL, 12)
             }) | bold;
         } else {
-            // 学生表头不显示借阅者列
+            // 学生表头不显示借阅者列和应还日期列
             header = hbox({
                 text("ID") | size(WIDTH, EQUAL, 8),
                 text(" | "),

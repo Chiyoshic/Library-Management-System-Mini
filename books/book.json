@@ -187,5 +187,14 @@
     "isbn": "9780743264747",
     "publisher": "Simon & Schuster",
     "title": "Einstein: His Life and Universe"
+  },
+  {
+    "author": "bbb",
+    "bookId": "24",
+    "bookType": "HISTORY",
+    "isAvailable": true,
+    "isbn": "ddd",
+    "publisher": "ccc",
+    "title": "aaa"
   }
 ]
