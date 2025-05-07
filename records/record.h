@@ -116,6 +116,21 @@ public:
     
     // 统计书籍借阅次数（从文件）
     static std::map<int, int> getBookBorrowCountsFromFile(const std::string& filename);
+
+    // 根据日期查询该日期之后到期的书籍
+    static std::vector<record> getBooksWithDueAfterDate(time_t date, const std::vector<record>& records);
+    
+    // 从文件中查询该日期之后到期的书籍
+    static std::vector<record> getBooksWithDueAfterDateFromFile(time_t date, const std::string& filename);
+    
+    // 获取所有逾期未归还的书籍
+    static std::vector<record> getOverdueUnreturnedRecords(const std::vector<record>& records);
+    
+    // 从文件中获取所有逾期未归还的书籍
+    static std::vector<record> getOverdueUnreturnedRecordsFromFile(const std::string& filename);
+    
+    // 获取记录的应还日期
+    time_t getDueDate() const;
 };
 
 #endif //RECORD_H

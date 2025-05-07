@@ -105,6 +105,13 @@ int record::getOverdueDays() const {
     return overdueDays;
 }
 
+// 获取记录的应还日期（借阅时间 + 15天）
+time_t record::getDueDate() const {
+    // 借阅期限（15天，转换为秒）
+    const time_t BORROW_PERIOD = 15 * 24 * 60 * 60;
+    return borrowTime + BORROW_PERIOD;
+}
+
 // 获取所有逾期记录
 std::vector<record> record::getOverdueRecords(const std::vector<record>& records) {
     std::vector<record> overdueRecords;
@@ -155,6 +162,58 @@ std::vector<record> record::getSoonOverdueRecords(const std::vector<record>& rec
     }
     
     return soonOverdueRecords;
+}
+
+// 根据日期查询该日期之后到期的书籍
+std::vector<record> record::getBooksWithDueAfterDate(time_t date, const std::vector<record>& records) {
+    std::vector<record> result;
+    
+    for (const auto& rec : records) {
+        // 只考虑未归还的书籍
+        if (!rec.isReturned()) {
+            // 计算应还日期
+            time_t dueDate = rec.getDueDate();
+            
+            // 如果应还日期晚于指定日期，加入结果
+            if (dueDate > date) {
+                result.push_back(rec);
+            }
+        }
+    }
+    
+    return result;
+}
+
+// 从文件中查询该日期之后到期的书籍
+std::vector<record> record::getBooksWithDueAfterDateFromFile(time_t date, const std::string& filename) {
+    // 读取所有记录
+    std::vector<record> allRecords = readFromFile(filename);
+    
+    // 调用已实现的方法筛选记录
+    return getBooksWithDueAfterDate(date, allRecords);
+}
+
+// 获取所有逾期未归还的书籍
+std::vector<record> record::getOverdueUnreturnedRecords(const std::vector<record>& records) {
+    std::vector<record> result;
+    
+    for (const auto& rec : records) {
+        // 检查是否未归还且已逾期
+        if (!rec.isReturned() && rec.isOverdue()) {
+            result.push_back(rec);
+        }
+    }
+    
+    return result;
+}
+
+// 从文件中获取所有逾期未归还的书籍
+std::vector<record> record::getOverdueUnreturnedRecordsFromFile(const std::string& filename) {
+    // 读取所有记录
+    std::vector<record> allRecords = readFromFile(filename);
+    
+    // 调用已实现的方法筛选记录
+    return getOverdueUnreturnedRecords(allRecords);
 }
 
 // JSON序列化
@@ -438,7 +497,7 @@ std::map<int, int> record::getBookBorrowCounts(const std::vector<record>& record
 }
 
 // 统计书籍借阅次数（从文件）
-std::map<int, int> record::getBookBorrowCountsFromFile(const std::string& filename) {
+std::map<int, int> record::getBookBorrowCountsFromFile(const std::string&filename) {
     // 从文件读取所有记录
     std::vector<record> records = readFromFile(filename);
     
