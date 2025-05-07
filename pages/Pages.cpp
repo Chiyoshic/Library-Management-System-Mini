@@ -47,6 +47,7 @@ void view_stats_page(User* user);  // Forward declaration
 void my_borrows_page(User* user);  // Forward declaration
 void borrow_return_page(User* user); // Forward declaration
 void borrowing_status_page(User* user); // Forward declaration
+void change_password_page(User* user); // Forward declaration for the new page
 
 void add_book_page(User* user) {
     clearScreen();
@@ -979,12 +980,21 @@ void student_dashboard_page(User* user) {
         borrow_return_page(user);
     });
     
+    // 添加修改密码按钮
+    auto change_password_button = Button("修改密码", [&] {
+        // 调用修改密码页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        change_password_page(user);
+    });
+    
     auto logout_button = Button("退出登录", screen.ExitLoopClosure());
     
     auto container = Container::Vertical({
         search_books_button,
         my_borrows_button,
         borrow_return_button,
+        change_password_button,
         logout_button
     });
     
@@ -998,6 +1008,7 @@ void student_dashboard_page(User* user) {
                 search_books_button->Render(),
                 my_borrows_button->Render(),
                 borrow_return_button->Render(),
+                change_password_button->Render(),
                 separator(),
                 logout_button->Render(),
             }) | border,
@@ -1005,6 +1016,137 @@ void student_dashboard_page(User* user) {
     });
     
     screen.Loop(renderer);
+}
+
+// 添加修改密码页面
+void change_password_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 创建密码变量
+    std::string old_password;
+    std::string new_password;
+    std::string confirm_password;
+    std::string error_message;
+    bool show_error = false;
+    bool show_success = false;
+    
+    // 创建输入框，密码使用*号显示
+    InputOption password_option;
+    password_option.password = true;
+    
+    auto old_password_input = Input(&old_password, "输入原密码", password_option);
+    auto new_password_input = Input(&new_password, "输入新密码", password_option);
+    auto confirm_password_input = Input(&confirm_password, "确认新密码", password_option);
+    
+    // 创建确认按钮
+    bool change_clicked = false;
+    auto change_button = Button("确认修改", [&] { change_clicked = true; });
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        student_dashboard_page(user);
+    });
+    
+    // 组合所有组件
+    auto container = Container::Vertical({
+        old_password_input,
+        new_password_input,
+        confirm_password_input,
+        Container::Horizontal({
+            change_button,
+            back_button
+        })
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        return vbox({
+            text("修改密码") | bold | hcenter,
+            text("用户: " + user->getName()) | hcenter,
+            separator(),
+            vbox({
+                hbox(text(" 原密码: "), old_password_input->Render()) | hcenter,
+                hbox(text(" 新密码: "), new_password_input->Render()) | hcenter,
+                hbox(text(" 确认密码: "), confirm_password_input->Render()) | hcenter,
+                show_error ? text(error_message) | color(Color::Red) | hcenter : text(""),
+                show_success ? text("密码修改成功！") | color(Color::Green) | hcenter : text(""),
+                separator(),
+                hbox(change_button->Render(), back_button->Render()) | hcenter,
+            }) | border,
+        });
+    });
+
+    // 处理修改密码按钮点击事件
+    auto change_handler = CatchEvent(renderer, [&](Event event) {
+        if (change_clicked) {
+            change_clicked = false;
+            
+            // 基本输入验证
+            if (old_password.empty() || new_password.empty() || confirm_password.empty()) {
+                show_error = true;
+                show_success = false;
+                error_message = "所有字段都不能为空";
+                return true;
+            }
+            
+            // 检查新密码和确认密码是否一致
+            if (new_password != confirm_password) {
+                show_error = true;
+                show_success = false;
+                error_message = "新密码和确认密码不一致";
+                return true;
+            }
+            
+            // 检查新密码是否与旧密码相同
+            if (old_password == new_password) {
+                show_error = true;
+                show_success = false;
+                error_message = "新密码不能与原密码相同";
+                return true;
+            }
+            
+            // 调用User::changePassword方法修改密码
+            bool success = User::changePassword(user->getId(), old_password, new_password);
+            if (success) {
+                show_error = false;
+                show_success = true;
+                
+                // 清空输入框
+                old_password.clear();
+                new_password.clear();
+                confirm_password.clear();
+                
+                // 显示修改成功，并在短暂延迟后自动返回
+                std::thread([&screen]() {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                    screen.ExitLoopClosure()();
+                }).detach();
+                
+                return true;
+            } else {
+                show_error = true;
+                show_success = false;
+                error_message = "密码修改失败，原密码可能不正确";
+                return true;
+            }
+        }
+        
+        return false;
+    });
+
+    // 密码修改成功后会自动返回
+    screen.Loop(change_handler);
+    
+    // 如果是因为修改成功而退出的，则返回学生仪表板
+    if (show_success) {
+        clearScreen();
+        student_dashboard_page(user);
+    }
 }
 
 void my_borrows_page(User* user) {
