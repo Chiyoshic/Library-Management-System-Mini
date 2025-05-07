@@ -244,3 +244,18 @@ bool User::adminChangeUserPassword(int adminId, int userId, const std::string& n
     // 保存更新后的用户列表
     return saveToFile(allUsers, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/users/user.json");
 }
+
+// 根据ID查找用户
+User* User::findUserById(int userId) {
+    static User foundUser;  // 使用静态变量存储找到的用户
+    std::vector<User> allUsers = loadAllUsers();
+    
+    for (const auto& user : allUsers) {
+        if (user.getId() == userId) {
+            foundUser = user;  // 拷贝找到的用户
+            return &foundUser;
+        }
+    }
+    
+    return nullptr;  // 未找到用户
+}

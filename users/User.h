@@ -49,11 +49,9 @@ public:
     static bool saveToFile(const std::vector<User>& users, const std::string& filename);
     static User* authenticate(const std::string& username, const std::string& password);
     static bool registerUser(const std::string& username, const std::string& password, Role role = STUDENT);
-    
-    // 新增用户密码修改方法
     static bool changePassword(int userId, const std::string& oldPassword, const std::string& newPassword);
-    // 新增管理员修改学生密码方法
     static bool adminChangeUserPassword(int adminId, int userId, const std::string& newPassword);
+    static User* findUserById(int userId);  // 根据ID查找用户的方法
 };
 
 #endif //USER_H
