@@ -173,3 +173,204 @@ graph TD
 
 ## 3、模块设计
 
+### 1、用户登录注册模块
+
+#### 管理员登录流程 (`admin_login_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示管理员登录页面]
+    B --> C[输入用户名和密码<br>密码以 * 显示]
+    C --> D[点击登录按钮]
+    D --> E{验证用户名和密码<br>User::authenticate}
+    E -->|成功| F[进入管理员仪表板<br>admin_dashboard_page]
+    E -->|失败| G[显示错误信息<br>账号或密码错误]
+    G --> C
+    D --> H[点击返回按钮]
+    H --> I[返回主菜单<br>printMenu]
+    F --> J[结束]
+    I --> J
+
+    %% 样式
+    classDef default fill:#e0f7fa,stroke:#0288d1,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 学生登录流程 (`student_login_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示学生登录页面]
+    B --> C[输入学号和密码<br>密码以 * 显示]
+    C --> D[点击登录按钮]
+    D --> E{验证学号和密码<br>User::authenticate}
+    E -->|成功| F[进入学生仪表板<br>student_dashboard_page]
+    E -->|失败| G[显示错误信息<br>账号或密码错误]
+    G --> C
+    D --> H[点击注册按钮]
+    H --> I[跳转到注册页面<br>student_register_page]
+    D --> J[点击返回按钮]
+    J --> K[返回主菜单<br>printMenu]
+    F --> L[结束]
+    I --> L
+    K --> L
+
+    %% 样式
+    classDef default fill:#e0f7fa,stroke:#0288d1,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L default;
+```
+
+#### 学生注册流程 (`student_register_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示学生注册页面]
+    B --> C[输入学号和密码<br>密码以 * 显示]
+    C --> D[点击确认注册按钮]
+    D --> E{验证输入<br>检查学号是否为空<br>检查密码是否为空}
+    E -->|不通过| F[显示错误信息<br>用户名或密码不能为空]
+    F --> C
+    E -->|通过| G{注册用户<br>User::registerUser}
+    G -->|成功| H[显示注册成功<br>延迟800ms后返回主菜单]
+    G -->|失败| I[显示错误信息<br>用户名可能已存在]
+    I --> C
+    D --> J[点击返回按钮]
+    J --> K[返回主菜单<br>printMenu]
+    H --> K
+    K --> L[结束]
+
+    %% 样式
+    classDef default fill:#e0f7fa,stroke:#0288d1,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L default;
+```
+
+### 2、管理员图书管理模块
+
+#### 图书管理主页面流程 (`manage_books_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示图书管理页面]
+    B --> C[选择功能选项]
+    C --> D[点击查询图书按钮]
+    D --> E[跳转到查询图书页面<br>search_books_page]
+    C --> F[点击借阅情况按钮]
+    F --> G[跳转到借阅情况页面<br>borrowing_status_page]
+    C --> H[点击录入图书按钮]
+    H --> I[跳转到录入图书页面<br>add_book_page]
+    C --> J[点击删除图书按钮]
+    J --> K[跳转到删除图书页面<br>delete_book_page]
+    C --> L[点击返回按钮]
+    L --> M[返回管理员仪表板<br>admin_dashboard_page]
+    E --> N[结束]
+    G --> N
+    I --> N
+    K --> N
+    M --> N
+
+    %% 样式
+    classDef default fill:#f0f8ff,stroke:#1e90ff,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L,M,N default;
+```
+
+#### 查询图书页面流程 (`search_books_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示查询图书页面]
+    B --> C[输入图书ID或标题]
+    C --> D[点击搜索按钮]
+    D --> E{搜索图书<br>book::loadAllBooks}
+    E -->|找到| F[显示搜索结果<br>包括ID、标题、作者等]
+    E -->|未找到| G[显示无结果提示]
+    G --> C
+    F --> H[按Tab切换焦点<br>或返回]
+    H --> I[点击返回按钮]
+    I --> J[返回图书管理页面<br>manage_books_page]
+    F --> J
+    J --> K[结束]
+
+    %% 样式
+    classDef default fill:#f0f8ff,stroke:#1e90ff,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K default;
+```
+
+#### 借阅情况页面流程 (`borrowing_status_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示借阅情况页面]
+    B --> C[显示所有未归还记录<br>record::readFromFile]
+    C --> D[输入日期]
+    D --> E[点击查询按钮]
+    E --> F{按日期查询<br>record::getBooksWithDueAfterDate}
+    F -->|找到| G[显示查询结果<br>包括逾期状态]
+    F -->|未找到| H[显示无结果提示]
+    H --> D
+    G --> I[点击返回按钮]
+    I --> J[返回图书管理页面<br>manage_books_page]
+    G --> J
+    J --> K[结束]
+
+    %% 样式
+    classDef default fill:#f0f8ff,stroke:#1e90ff,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K default;
+```
+
+录入图书页面流程 (`add_book_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示录入图书页面]
+    B --> C[输入图书信息<br>ID、标题、作者、出版社、ISBN、类型]
+    C --> D[点击保存按钮]
+    D --> E{验证输入<br>检查字段是否为空}
+    E -->|不通过| F[显示错误信息<br>所有字段都不能为空]
+    F --> C
+    E -->|通过| G{保存图书<br>book::addBook}
+    G -->|成功| H[显示成功信息<br>清空输入框并延迟800ms返回]
+    G -->|失败| I[显示错误信息<br>ID可能已存在]
+    I --> C
+    D --> J[点击更新按钮]
+    J --> K{验证输入并更新<br>book::updateBook}
+    K -->|成功| L[显示成功信息<br>延迟800ms返回]
+    K -->|失败| M[显示错误信息<br>未找到图书或系统错误]
+    M --> C
+    D --> N[点击返回按钮]
+    N --> O[返回图书管理页面<br>manage_books_page]
+    H --> O
+    L --> O
+    O --> P[结束]
+
+    %% 样式
+    classDef default fill:#f0f8ff,stroke:#1e90ff,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P default;
+```
+
+#### 删除图书页面流程 (`delete_book_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示删除图书页面]
+    B --> C[输入图书ID]
+    C --> D[点击删除按钮]
+    D --> E{验证并删除<br>book::findBookById<br>book::saveToFile}
+    E -->|成功| F[显示删除成功<br>清空输入框并延迟800ms返回]
+    E -->|失败| G[显示错误信息<br>未找到图书或保存失败]
+    G --> C
+    D --> H[点击返回按钮]
+    H --> I[返回图书管理页面<br>manage_books_page]
+    F --> I
+    I --> J[结束]
+
+    %% 样式
+    classDef default fill:#f0f8ff,stroke:#1e90ff,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 说明
+- **图书管理主页面流程**：展示了 `manage_books_page` 的功能选项，包括查询、借阅情况、录入和删除，以及返回管理员仪表板。
+- **查询图书页面流程**：描述了 `search_books_page` 的搜索功能，支持按ID或标题查询，并返回结果或提示无结果。
+- **借阅情况页面流程**：描述了 `borrowing_status_page` 的功能，展示未归还记录并支持按日期查询。
+- **录入图书页面流程**：描述了 `add_book_page` 的录入和更新功能，包括输入验证和保存/更新逻辑。
+- **删除图书页面流程**：描述了 `delete_book_page` 的删除功能，包含验证和文件更新。
