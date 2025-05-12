@@ -374,3 +374,510 @@ flowchart TD
 - **借阅情况页面流程**：描述了 `borrowing_status_page` 的功能，展示未归还记录并支持按日期查询。
 - **录入图书页面流程**：描述了 `add_book_page` 的录入和更新功能，包括输入验证和保存/更新逻辑。
 - **删除图书页面流程**：描述了 `delete_book_page` 的删除功能，包含验证和文件更新。
+
+### 3、管理员用户管理模块流程图
+
+#### 用户管理主页面流程 (`manage_users_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示用户管理页面]
+    B --> C[选择功能选项]
+    C --> D[点击查看用户列表按钮]
+    D --> E[跳转到查看用户列表页面]
+    C --> F[点击搜索用户按钮]
+    F --> G[跳转到搜索用户页面<br>search_users_page]
+    C --> H[点击重置密码按钮]
+    H --> I[跳转到重置密码页面<br>reset_password_page]
+    C --> J[点击返回按钮]
+    J --> K[返回管理员仪表板<br>admin_dashboard_page]
+    E --> L[结束]
+    G --> L
+    I --> L
+    K --> L
+
+    %% 样式
+    classDef default fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L default;
+```
+
+#### 查看用户列表页面流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示用户列表页面]
+    B --> C[加载所有用户数据<br>User::loadAllUsers]
+    C --> D[显示用户列表<br>包括ID、用户名、角色]
+    D --> E[逾期未还用户以红色高亮<br>record::getUnreturnedRecords]
+    E --> F[点击返回按钮]
+    F --> G[返回用户管理页面<br>manage_users_page]
+    G --> H[结束]
+
+    %% 样式
+    classDef default fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
+    class A,B,C,D,E,F,G,H default;
+```
+
+#### 搜索用户页面流程 (`search_users_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示搜索用户页面]
+    B --> C[输入用户ID或用户名]
+    C --> D[点击搜索按钮]
+    D --> E{搜索用户<br>User::findUserByIdOrName}
+    E -->|找到| F[显示搜索结果<br>包括ID、用户名、角色、借阅状态]
+    E -->|未找到| G[显示无结果提示]
+    G --> C
+    F --> H[点击返回按钮]
+    H --> I[返回用户管理页面<br>manage_users_page]
+    F --> I
+    I --> J[结束]
+
+    %% 样式
+    classDef default fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 重置密码页面流程 (`reset_password_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示重置密码页面]
+    B --> C[输入用户ID]
+    C --> D[点击重置按钮]
+    D --> E{验证用户<br>User::findUserById}
+    E -->|找到| F{重置密码<br>User::resetPassword}
+    F -->|成功| G[显示成功信息<br>延迟800ms返回]
+    F -->|失败| H[显示错误信息<br>重置失败]
+    H --> C
+    E -->|未找到| I[显示无结果提示]
+    I --> C
+    D --> J[点击返回按钮]
+    J --> K[返回用户管理页面<br>manage_users_page]
+    G --> K
+    K --> L[结束]
+
+    %% 样式
+    classDef default fill:#e6f3ff,stroke:#0066cc,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L default;
+```
+
+#### 说明
+- **用户管理主页面流程**：展示了 `manage_users_page` 的功能选项，包括查看用户列表、搜索用户和重置密码，以及返回管理员仪表板。
+- **查看用户列表页面流程**：描述了用户列表的加载和显示功能，突出显示逾期未还用户的红色高亮。
+- **搜索用户页面流程**：描述了 `search_users_page` 的搜索功能，支持按ID或用户名查询，并返回结果或提示无结果。
+- **重置密码页面流程**：描述了 `reset_password_page` 的重置功能，包括用户验证和密码重置逻辑。
+
+### 4、 管理员统计信息模块流程图
+
+#### 统计信息主页面流程 (`view_stats_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示统计信息页面]
+    B --> C[选择功能选项]
+    C --> D[点击查看借阅次数按钮]
+    D --> E[跳转到借阅次数统计页面]
+    C --> F[点击可视化展示按钮]
+    F --> G[跳转到可视化展示页面<br>visualize_stats_page]
+    C --> H[点击返回按钮]
+    H --> I[返回管理员仪表板<br>admin_dashboard_page]
+    E --> J[结束]
+    G --> J
+    I --> J
+
+    %% 样式
+    classDef default fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 借阅次数统计页面流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示借阅次数统计页面]
+    B --> C[加载借阅记录<br>record::getBookBorrowCountsFromFile]
+    C --> D[按借阅次数降序排列<br>std::sort]
+    D --> E[显示统计结果<br>包括图书ID、标题、作者、类型、借阅次数]
+    E --> F[点击返回按钮]
+    F --> G[返回统计信息页面<br>view_stats_page]
+    G --> H[结束]
+
+    %% 样式
+    classDef default fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    class A,B,C,D,E,F,G,H default;
+```
+
+#### 可视化展示页面流程 (`visualize_stats_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示可视化展示页面]
+    B --> C[加载借阅记录<br>record::getBookBorrowCountsFromFile]
+    C --> D[按借阅次数降序排列<br>std::sort]
+    D --> F[显示可视化结果<br>使用字符画或FTXUI组件]
+    F --> G[点击返回按钮]
+    G --> H[返回统计信息页面<br>view_stats_page]
+    H --> I[结束]
+
+    %% 样式
+    classDef default fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I default;
+```
+
+#### 说明
+- **统计信息主页面流程**：展示了 `view_stats_page` 的功能选项，包括查看借阅次数统计和可视化展示，以及返回管理员仪表板。
+- **借阅次数统计页面流程**：描述了借阅次数统计功能，从文件加载数据，按借阅次数降序排列并展示结果。
+- **可视化展示页面流程**：描述了 `visualize_stats_page` 的可视化功能，基于借阅次数数据生成柱状图（假设使用字符画或 FTXUI 组件展示）。
+
+### 5、学生用户搜索图书模块流程图
+
+#### 搜索图书页面流程 (`search_books_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示搜索图书页面]
+    B --> C[输入图书ID或标题]
+    C --> D[点击搜索按钮]
+    D --> E{搜索图书<br>book::loadAllBooks}
+    E -->|找到| F[显示搜索结果<br>包括ID、标题、作者、状态<br>不显示借阅者信息]
+    E -->|未找到| G[显示无结果提示]
+    G --> C
+    F --> H[查看图书状态<br>可借阅或已借出]
+    H --> I[点击返回按钮]
+    I --> J[返回学生仪表板<br>student_dashboard_page]
+    F --> J
+    J --> K[结束]
+
+    %% 样式
+    classDef default fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K default;
+```
+
+#### 查看图书状态子页面流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示图书状态详情]
+    B --> C[加载图书状态<br>book::isAvailable]
+    C --> D[显示状态<br>可借阅或已借出]
+    D --> E[点击返回按钮]
+    E --> F[返回搜索图书页面<br>search_books_page]
+    F --> G[结束]
+
+    %% 样式
+    classDef default fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
+    class A,B,C,D,E,F,G default;
+```
+
+#### 说明
+- **搜索图书页面流程**：展示了 `search_books_page` 的学生用户搜索图书功能，支持按ID或标题搜索，显示结果（不含借阅者信息）或提示无结果，并允许返回学生仪表板。
+- **查看图书状态子页面流程**：描述了查看图书状态的子页面，显示图书是否可借阅，学生用户无法查看借阅者信息。
+
+### 6、学生用户我的借阅模块流程图
+
+#### 我的借阅主页面流程 (`my_borrows_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示我的借阅页面]
+    B --> C[选择功能选项]
+    C --> D[点击查看所有借阅记录按钮]
+    D --> E[跳转到查看借阅记录页面]
+    C --> F[点击筛选逾期记录按钮]
+    F --> G[跳转到筛选逾期记录页面<br>filter_overdue_page]
+    C --> H[点击返回按钮]
+    H --> I[返回学生仪表板<br>student_dashboard_page]
+    E --> J[结束]
+    G --> J
+    I --> J
+
+    %% 样式
+    classDef default fill:#e0f2f1,stroke:#00897b,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 查看借阅记录页面流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示借阅记录页面]
+    B --> C[加载学生借阅记录<br>record::readFromFile]
+    C --> D[显示所有记录<br>包括图书信息、借阅时间、应还时间、状态]
+    D --> E[逾期未还记录以红色高亮<br>已归还但曾逾期以黄色高亮]
+    E --> F[点击返回按钮]
+    F --> G[返回我的借阅页面<br>my_borrows_page]
+    G --> H[结束]
+
+    %% 样式
+    classDef default fill:#e0f2f1,stroke:#00897b,stroke-width:2px;
+    class A,B,C,D,E,F,G,H default;
+```
+
+#### 筛选逾期记录页面流程 (`filter_overdue_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示筛选逾期记录页面]
+    B --> C[加载学生借阅记录<br>record::readFromFile]
+    C --> D[筛选逾期记录<br>record::isOverdue]
+    D --> E[显示逾期记录<br>包括图书信息、借阅时间、应还时间]
+    E --> F[逾期记录以红色高亮]
+    F --> G[点击返回按钮]
+    G --> H[返回我的借阅页面<br>my_borrows_page]
+    H --> I[结束]
+
+    %% 样式
+    classDef default fill:#e0f2f1,stroke:#00897b,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I default;
+```
+
+#### 说明
+- **我的借阅主页面流程**：展示了 `my_borrows_page` 的功能选项，包括查看所有借阅记录和筛选逾期记录，以及返回学生仪表板。
+- **查看借阅记录页面流程**：描述了加载和显示学生所有借阅记录的功能，突出逾期未还（红色）和曾逾期已归还（黄色）记录。
+- **筛选逾期记录页面流程**：描述了 `filter_overdue_page` 的筛选功能，仅显示逾期记录并以红色高亮。
+
+### 7、学生用户借书还书模块流程图
+
+#### 借书还书主页面流程 (`borrow_return_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示借书还书页面]
+    B --> C[输入图书ID]
+    C --> D[点击查询按钮]
+    D --> E{查询图书状态<br>book::findBookById}
+    E -->|找到| F[显示图书状态<br>可借阅或已借出]
+    E -->|未找到| G[显示无结果提示]
+    G --> C
+    F --> H[选择操作]
+    H --> I[点击借书按钮]
+    I --> J[跳转到借书页面]
+    H --> K[点击还书按钮]
+    K --> L[跳转到还书页面<br>return_book_page]
+    H --> M[点击返回按钮]
+    M --> N[返回学生仪表板<br>student_dashboard_page]
+    J --> O[结束]
+    L --> O
+    N --> O
+
+    %% 样式
+    classDef default fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K,L,M,N,O default;
+```
+
+#### 借书页面流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示借书页面]
+    B --> C{检查图书状态<br>book::isAvailable}
+    C -->|可借阅| D[记录借阅信息<br>record::addBorrowRecord]
+    D --> E[设置应还日期<br>15天后]
+    E --> F[显示借阅成功信息<br>包括应还日期]
+    C -->|已借出| G[显示提示<br>图书已被借出]
+    G --> H[点击返回按钮]
+    F --> H
+    H --> I[返回借书还书页面<br>borrow_return_page]
+    I --> J[结束]
+
+    %% 样式
+    classDef default fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 还书页面流程 (`return_book_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示还书页面]
+    B --> C{检查借阅记录<br>record::isBookBorrowedByUser}
+    C -->|是本人借阅| D[更新借阅记录<br>record::addReturnRecord]
+    D --> E{检查是否逾期<br>record::isOverdue}
+    E -->|是| F[显示逾期信息<br>以红色高亮]
+    E -->|否| G[显示正常归还信息]
+    C -->|不是本人借阅| H[显示提示<br>非本人借阅或未借阅]
+    H --> I[点击返回按钮]
+    F --> I
+    G --> I
+    I --> J[返回借书还书页面<br>borrow_return_page]
+    J --> K[结束]
+
+    %% 样式
+    classDef default fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K default;
+```
+
+#### 说明
+- **借书还书主页面流程**：展示了 `borrow_return_page` 的功能，学生输入图书ID后可查询图书状态，并选择借书或还书操作。
+- **借书页面流程**：描述了借书功能，检查图书是否可借阅，记录借阅信息并设置应还日期（15天后）。
+- **还书页面流程**：描述了 `return_book_page` 的还书功能，验证是否为本人借阅，更新记录并显示逾期状态（逾期以红色高亮）。
+
+### 8、学生用户修改密码模块流程图
+
+#### 修改密码主页面流程 (`change_password_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示修改密码页面]
+    B --> C[输入原密码和新密码]
+    C --> D[点击确认修改按钮]
+    D --> E[跳转到验证页面]
+    C --> F[点击返回按钮]
+    F --> G[返回学生仪表板<br>student_dashboard_page]
+    E --> H[结束]
+    G --> H
+
+    %% 样式
+    classDef default fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;
+    class A,B,C,D,E,F,G,H default;
+```
+
+#### 验证和修改密码页面流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[验证原密码<br>User::authenticate]
+    B -->|正确| C{验证新密码<br>检查是否为空}
+    B -->|错误| D[显示错误信息<br>原密码错误]
+    D --> E[返回修改密码页面<br>change_password_page]
+    C -->|不通过| F[显示错误信息<br>新密码不能为空]
+    F --> E
+    C -->|通过| G[更新密码<br>User::changePassword]
+    G -->|成功| H[显示成功信息<br>延迟800ms返回]
+    G -->|失败| I[显示错误信息<br>修改失败]
+    I --> E
+    H --> J[返回学生仪表板<br>student_dashboard_page]
+    E --> K[结束]
+    J --> K
+
+    %% 样式
+    classDef default fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J,K default;
+```
+
+#### 说明
+- **修改密码主页面流程**：展示了 `change_password_page` 的功能，学生输入原密码和新密码后可选择确认修改或返回。
+- **验证和修改密码页面流程**：描述了验证原密码、检查新密码合法性以及更新密码的流程，成功后返回学生仪表板，失败则返回修改页面。
+
+# 三、功能实现
+
+## 1、主要函数：函数名及参数含义
+
+### (1) User
+
+#### 成员变量
+- `int id`：用户ID，用于唯一标识每个用户。
+- `std::string name`：用户名，用于登录和身份识别。
+- `std::string password`：用户密码，用于身份验证。
+- `Role userRole`：用户角色，枚举类型（`ADMIN` 或 `STUDENT`），表示用户权限。
+
+#### 成员函数
+- `User()`：默认构造函数，初始化 `id` 为 0，`name` 和 `password` 为空字符串，`userRole` 默认设置为 `STUDENT`。
+- `User(int id, const std::string& name, const std::string& password, Role role)`：带参数的构造函数，初始化用户对象，参数分别为用户ID、用户名、密码和角色。
+- `int getId() const`：获取用户ID，返回 `int` 类型。
+- `std::string getName() const`：获取用户名，返回 `std::string` 类型。
+- `std::string getPassword() const`：获取用户密码，返回 `std::string` 类型。
+- `Role getRole() const`：获取用户角色，返回 `Role` 枚举类型。
+- `void setId(int id)`：设置用户ID，参数为新的 `id` 值。
+- `void setName(const std::string& name)`：设置用户名，参数为新的 `name` 值。
+- `void setPassword(const std::string& password)`：设置用户密码，参数为新的 `password` 值。
+- `void setRole(Role role)`：设置用户角色，参数为新的 `role` 值。
+- `json toJson() const`：将用户对象转换为 JSON 格式，返回 `json` 对象，包含 `id`、`name`、`password` 和角色（字符串形式 `ADMIN` 或 `STUDENT`）。
+- `void fromJson(const json& j)`：从 JSON 对象中加载用户数据，参数为 `json` 对象，更新 `id`、`name`、`password` 和 `userRole`。
+- `std::vector<User> loadFromFile(const std::string& filename)`：从指定文件加载用户数据，参数为文件名（`std::string`），返回 `std::vector<User>`，读取 JSON 文件并解析为用户列表。
+- `std::vector<User> loadAllUsers()`：加载所有用户数据，返回 `std::vector<User>`，从特定路径的 `user.json` 文件加载。
+- `bool saveToFile(const std::vector<User>& users, const std::string& filename)`：将用户列表保存到指定文件，参数分别为用户列表（`std::vector<User>`）和文件名（`std::string`），返回 `bool` 表示成功与否。
+- `User* authenticate(const std::string& username, const std::string& password)`：验证用户身份，参数分别为用户名和密码（`std::string`），返回指向 `User` 对象的指针，若验证失败返回 `nullptr`。
+- `bool registerUser(const std::string& username, const std::string& password, Role role)`：注册新用户，参数分别为用户名、密码和角色（`Role`），返回 `bool` 表示注册成功与否。
+- `bool changePassword(int userId, const std::string& oldPassword, const std::string& newPassword)`：修改用户密码，参数分别为用户ID、原密码和新密码（`std::string`），返回 `bool` 表示修改成功与否。
+- `bool adminChangeUserPassword(int adminId, int userId, const std::string& newPassword)`：管理员修改其他用户密码，参数分别为管理员ID、目标用户ID和新密码（`std::string`），返回 `bool` 表示修改成功与否。
+- `User* findUserById(int userId)`：根据ID查找用户，参数为用户ID（`int`），返回指向 `User` 对象的指针，若未找到返回 `nullptr`。
+
+### (2) Book
+
+#### 成员变量
+- `std::string bookId`：图书的唯一标识符。
+- `std::string title`：图书标题。
+- `std::string author`：图书作者。
+- `type bookType`：图书类型，枚举类型（`FICTION`、`NON_FICTION`、`SCIENCE`、`HISTORY`、`BIOGRAPHY`、`FANTASY`、`MYSTERY`、`ROMANCE`）。
+- `std::string publisher`：图书出版社。
+- `std::string isbn`：图书的国际标准书号（ISBN）。
+- `bool isAvailable`：图书是否可借阅的状态。
+
+#### 成员函数
+- `book()`：默认构造函数，初始化 `bookId`、`title`、`author` 为空字符串，`bookType` 默认设置为 `FICTION`，`publisher`、`isbn` 为空字符串，`isAvailable` 默认设置为 `true`。
+- `book(const std::string& id, const std::string& title, const std::string& author, type bookType, const std::string& publisher, const std::string& isbn, bool isAvailable)`：带参数的构造函数，初始化图书对象，参数分别为图书ID、标题、作者、类型、出版社、ISBN 和是否可借阅。
+- `std::string getBookId() const`：获取图书ID，返回 `std::string` 类型。
+- `std::string getTitle() const`：获取图书标题，返回 `std::string` 类型。
+- `std::string getAuthor() const`：获取图书作者，返回 `std::string` 类型。
+- `type getBookType() const`：获取图书类型，返回 `type` 枚举类型。
+- `std::string getPublisher() const`：获取图书出版社，返回 `std::string` 类型。
+- `std::string getIsbn() const`：获取图书ISBN，返回 `std::string` 类型。
+- `bool getIsAvailable() const`：获取图书是否可借阅的状态，返回 `bool` 类型。
+- `void setBookId(const std::string& id)`：设置图书ID，参数为新的 `id` 值。
+- `void setTitle(const std::string& title)`：设置图书标题，参数为新的 `title` 值。
+- `void setAuthor(const std::string& author)`：设置图书作者，参数为新的 `author` 值。
+- `void setBookType(type bookType)`：设置图书类型，参数为新的 `bookType` 值。
+- `void setPublisher(const std::string& publisher)`：设置图书出版社，参数为新的 `publisher` 值。
+- `void setIsbn(const std::string& isbn)`：设置图书ISBN，参数为新的 `isbn` 值。
+- `void setIsAvailable(bool available)`：设置图书是否可借阅的状态，参数为新的 `available` 值。
+- `json toJson() const`：将图书对象转换为 JSON 格式，返回 `json` 对象，包含 `bookId`、`title`、`author`、`publisher`、`isbn`、`isAvailable` 和 `bookType`（字符串形式）。
+- `void fromJson(const json& j)`：从 JSON 对象中加载图书数据，参数为 `json` 对象，更新 `bookId`、`title`、`author`、`publisher`、`isbn`、`isAvailable` 和 `bookType`。
+- `std::vector<book> loadFromFile(const std::string& filename)`：从指定文件加载图书数据，参数为文件名（`std::string`），返回 `std::vector<book>`，读取 JSON 文件并解析为图书列表。
+- `std::vector<book> loadAllBooks()`：加载所有图书数据，返回 `std::vector<book>`，从特定路径的 `book.json` 文件加载。
+- `bool saveToFile(const std::vector<book>& books, const std::string& filename)`：将图书列表保存到指定文件，参数分别为图书列表（`std::vector<book>`）和文件名（`std::string`），返回 `bool` 表示成功与否。
+- `bool addBook(const book& newBook)`：添加新图书，参数为新的图书对象（`book`），检查ID或ISBN是否重复，返回 `bool` 表示添加成功与否。
+- `book* findBookById(const std::string& id)`：根据ID查找图书，参数为图书ID（`std::string`），返回指向 `book` 对象的指针，若未找到返回 `nullptr`。
+- `bool updateBook(const book& updatedBook)`：更新图书信息，参数为更新后的图书对象（`book`），返回 `bool` 表示更新成功与否。
+
+### (3) Record
+
+#### 成员变量
+- `int borrowerID`：借阅者的ID，用于标识借阅人。
+- `int bookID`：图书的ID，用于标识被借阅的图书。
+- `time_t borrowTime`：借阅时间，记录借阅发生的 UNIX 时间戳。
+- `time_t returnTime`：归还时间，记录归还发生的 UNIX 时间戳，默认为 0 表示未归还。
+
+#### 成员函数
+- `record()`：默认构造函数，初始化 `borrowerID`、`bookID` 和 `returnTime` 为 0，`borrowTime` 为 0。
+- `record(int borrowerID, int bookID, time_t borrowTime)`：借书记录构造函数，初始化借阅记录，参数分别为借阅者ID、图书ID和借阅时间。
+- `int getBorrowerID() const`：获取借阅者ID，返回 `int` 类型。
+- `int getBookID() const`：获取图书ID，返回 `int` 类型。
+- `time_t getBorrowTime() const`：获取借阅时间，返回 `time_t` 类型。
+- `time_t getReturnTime() const`：获取归还时间，返回 `time_t` 类型。
+- `void setBorrowerID(int id)`：设置借阅者ID，参数为新的 `id` 值。
+- `void setBookID(int id)`：设置图书ID，参数为新的 `id` 值。
+- `void setBorrowTime(time_t time)`：设置借阅时间，参数为新的 `time` 值。
+- `void setReturnTime(time_t time)`：设置归还时间，参数为新的 `time` 值。
+- `bool isReturned() const`：判断借阅记录是否已归还，返回 `bool` 类型（`returnTime != 0` 表示已归还）。
+- `void returnBook()`：设置归还时间为当前时间，用于记录归还操作。
+- `bool isOverdue() const`：检查借阅是否逾期，借阅期为 15 天，返回 `bool` 类型（已归还时检查是否逾期，未归还时检查当前是否逾期）。
+- `int getOverdueDays() const`：获取逾期天数，借阅期为 15 天，返回 `int` 类型（若未逾期返回 0，逾期天数向上取整）。
+- `time_t getDueDate() const`：获取应还日期，计算为借阅时间加 15 天，返回 `time_t` 类型。
+- `std::vector<record> getOverdueRecords(const std::vector<record>& records)`：获取所有逾期记录，参数为记录列表（`std::vector<record>`），返回逾期记录的向量。
+- `bool willBeOverdueSoon(int days) const`：检查借阅是否即将逾期，参数为预警天数（`int`），返回 `bool` 类型（未逾期且剩余时间小于预警天数）。
+- `std::vector<record> getSoonOverdueRecords(const std::vector<record>& records, int days)`：获取即将逾期的记录，参数分别为记录列表（`std::vector<record>`）和预警天数（`int`），返回即将逾期记录的向量。
+- `std::vector<record> getBooksWithDueAfterDate(time_t date, const std::vector<record>& records)`：根据日期查询该日期之后到期的书籍，参数分别为日期（`time_t`）和记录列表（`std::vector<record>`），返回匹配记录的向量。
+- `std::vector<record> getBooksWithDueAfterDateFromFile(time_t date, const std::string& filename)`：从文件中查询该日期之后到期的书籍，参数分别为日期（`time_t`）和文件名（`std::string`），返回匹配记录的向量。
+- `std::vector<record> getOverdueUnreturnedRecords(const std::vector<record>& records)`：获取所有逾期未归还的书籍记录，参数为记录列表（`std::vector<record>`），返回匹配记录的向量。
+- `std::vector<record> getOverdueUnreturnedRecordsFromFile(const std::string& filename)`：从文件中获取所有逾期未归还的书籍记录，参数为文件名（`std::string`），返回匹配记录的向量。
+- `json toJson() const`：将记录对象转换为 JSON 格式，返回 `json` 对象，包含 `borrowerID`、`bookID`、`borrowTime` 和 `returnTime`。
+- `record fromJson(const json& j)`：从 JSON 对象中加载记录数据，参数为 `json` 对象，返回 `record` 对象。
+- `std::vector<record> readFromFile(const std::string& filename)`：从 JSON 文件读取所有记录，参数为文件名（`std::string`），返回记录列表（`std::vector<record>`）。
+- `void writeToFile(const std::vector<record>& records, const std::string& filename)`：将记录列表写入 JSON 文件，参数分别为记录列表（`std::vector<record>`）和文件名（`std::string`）。
+- `void addBorrowRecord(int borrowerID, int bookID, const std::string& filename)`：添加借阅记录并保存到文件，参数分别为借阅者ID、图书ID和文件名（`std::string`），检查图书是否已被借出并更新图书可用性。
+- `bool addReturnRecord(int borrowerID, int bookID, const std::string& filename)`：添加归还记录并保存到文件，参数分别为借阅者ID、图书ID和文件名（`std::string`），返回 `bool` 表示成功与否。
+- `std::vector<record> getUserRecords(int userID, const std::vector<record>& records)`：获取用户的所有借阅记录，参数分别为用户ID（`int`）和记录列表（`std::vector<record>`），返回匹配记录的向量。
+- `std::vector<record> getUserRecordsFromFile(int userID, const std::string& filename)`：从文件中获取用户的所有借阅记录，参数分别为用户ID（`int`）和文件名（`std::string`），返回匹配记录的向量。
+- `std::vector<record> getBookRecords(int bookID, const std::vector<record>& records)`：获取图书的所有借阅记录，参数分别为图书ID（`int`）和记录列表（`std::vector<record>`），返回匹配记录的向量。
+- `std::vector<record> getUnreturnedRecords(const std::vector<record>& records)`：获取当前未归还的记录，参数为记录列表（`std::vector<record>`），返回未归还记录的向量。
+- `bool isBookBorrowed(int bookID, const std::vector<record>& records)`：检查图书是否已被借出，参数分别为图书ID（`int`）和记录列表（`std::vector<record>`），返回 `bool` 类型。
+- `bool hasUserBorrowedBook(int userID, int bookID, const std::vector<record>& records)`：检查用户是否已借此书，参数分别为用户ID、图书ID和记录列表（`std::vector<record>`），返回 `bool` 类型。
+- `bool hasUserReturnedAllBooks(int userID, const std::vector<record>& records)`：检查用户是否已归还所有借阅的图书，参数分别为用户ID和记录列表（`std::vector<record>`），返回 `bool` 类型。
+- `bool isBookReturned(int bookID, const std::vector<record>& records)`：判断图书是否已归还，参数分别为图书ID和记录列表（`std::vector<record>`），返回 `bool` 类型。
+- `std::string formatTime(time_t time)`：格式化显示时间，参数为时间戳（`time_t`），返回格式化后的时间字符串（`YYYY-MM-DD HH:MM:SS` 或 `未归还`）。
+- `void printRecord() const`：打印记录信息，显示借阅者ID、图书ID、借阅时间、归还时间和状态。
+- `std::map<int, int> getBookBorrowCounts(const std::vector<record>& records)`：统计书籍借阅次数，参数为记录列表（`std::vector<record>`），返回图书ID与借阅次数的映射（`std::map<int, int>`）。
+- `std::map<int, int> getBookBorrowCountsFromFile(const std::string& filename)`：从文件中统计书籍借阅次数，参数为文件名（`std::string`），返回图书ID与借阅次数的映射（`std::map<int, int>`）。
