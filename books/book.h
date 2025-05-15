@@ -70,6 +70,9 @@ public:
     static bool addBook(const book& newBook);
     static book* findBookById(const std::string& id);
     static bool updateBook(const book& updatedBook);
+    
+    // 新增：根据用户的借阅历史推荐书籍
+    static std::vector<book> recommendBooks(int userId);
 };
 
 #endif //BOOK_H

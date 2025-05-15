@@ -6,6 +6,8 @@
 #include <fstream>
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <map>
+#include "record.h"
 
 using json = nlohmann::json;
 
@@ -258,4 +260,71 @@ bool book::updateBook(const book& updatedBook) {
         std::cerr << "Book not found" << std::endl;
         return false;
     }
+}
+
+// 根据用户借阅历史推荐图书
+std::vector<book> book::recommendBooks(int userId) {
+    // 获取用户的所有借阅记录
+    std::vector<record> userRecords = record::getUserRecordsFromFile(userId, "/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
+    
+    // 统计每种类型的借阅次数
+    std::map<book::type, int> typeCount;
+    
+    // 遍历用户的所有借阅记录
+    for (const auto& rec : userRecords) {
+        // 找到对应的图书
+        std::string bookIdStr = std::to_string(rec.getBookID());
+        book* borrowedBook = book::findBookById(bookIdStr);
+        
+        if (borrowedBook != nullptr) {
+            // 获取图书类型并增加计数
+            book::type bookType = borrowedBook->getBookType();
+            if (typeCount.find(bookType) != typeCount.end()) {
+                typeCount[bookType]++;
+            } else {
+                typeCount[bookType] = 1;
+            }
+        }
+    }
+    
+    // 找出借阅次数最多的图书类型
+    book::type mostBorrowedType = book::FICTION; // 默认类型
+    int maxCount = 0;
+    
+    for (const auto& pair : typeCount) {
+        if (pair.second > maxCount) {
+            maxCount = pair.second;
+            mostBorrowedType = pair.first;
+        }
+    }
+    
+    // 如果用户没有借阅记录，使用默认类型
+    if (maxCount == 0) {
+        mostBorrowedType = book::FICTION;
+    }
+    
+    // 获取所有图书
+    std::vector<book> allBooks = loadAllBooks();
+    std::vector<book> recommendedBooks;
+    
+    // 找出与用户最喜欢类型相同且可借阅的图书
+    for (const auto& b : allBooks) {
+        if (b.getBookType() == mostBorrowedType && b.getIsAvailable()) {
+            // 检查用户是否已经借过这本书
+            bool hasAlreadyBorrowed = false;
+            for (const auto& rec : userRecords) {
+                if (std::stoi(b.getBookId()) == rec.getBookID()) {
+                    hasAlreadyBorrowed = true;
+                    break;
+                }
+            }
+            
+            // 如果用户没有借过这本书，添加到推荐列表
+            if (!hasAlreadyBorrowed) {
+                recommendedBooks.push_back(b);
+            }
+        }
+    }
+    
+    return recommendedBooks;
 }
