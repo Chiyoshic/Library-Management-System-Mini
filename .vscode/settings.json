@@ -5,6 +5,7 @@
         "*.wxs": "javascript",
         "__locale": "cpp",
         "ostream": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "string": "cpp"
     }
 }

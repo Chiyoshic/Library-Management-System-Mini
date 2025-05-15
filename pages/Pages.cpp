@@ -48,6 +48,7 @@ void my_borrows_page(User* user);  // Forward declaration
 void borrow_return_page(User* user); // Forward declaration
 void borrowing_status_page(User* user); // Forward declaration
 void change_password_page(User* user); // Forward declaration for the new page
+void recommended_books_page(User* user); // Forward declaration for recommended books page
 
 void add_book_page(User* user) {
     clearScreen();
@@ -980,6 +981,14 @@ void student_dashboard_page(User* user) {
         borrow_return_page(user);
     });
     
+    // 添加推荐书籍按钮
+    auto recommend_books_button = Button("推荐书籍", [&] {
+        // 调用推荐书籍页面
+        screen.ExitLoopClosure()();
+        clearScreen();
+        recommended_books_page(user);
+    });
+    
     // 添加修改密码按钮
     auto change_password_button = Button("修改密码", [&] {
         // 调用修改密码页面
@@ -994,6 +1003,7 @@ void student_dashboard_page(User* user) {
         search_books_button,
         my_borrows_button,
         borrow_return_button,
+        recommend_books_button,
         change_password_button,
         logout_button
     });
@@ -1008,6 +1018,7 @@ void student_dashboard_page(User* user) {
                 search_books_button->Render(),
                 my_borrows_button->Render(),
                 borrow_return_button->Render(),
+                recommend_books_button->Render(),
                 change_password_button->Render(),
                 separator(),
                 logout_button->Render(),
@@ -1015,6 +1026,134 @@ void student_dashboard_page(User* user) {
         });
     });
     
+    screen.Loop(renderer);
+}
+
+// 添加推荐书籍页面
+void recommended_books_page(User* user) {
+    clearScreen();
+    using namespace ftxui;
+
+    auto screen = ScreenInteractive::TerminalOutput();
+
+    // 获取用户ID
+    int userId = user->getId();
+    
+    // 调用book::recommendBooks获取推荐书籍
+    std::vector<book> recommended_books = book::recommendBooks(userId);
+    
+    // 推荐书籍的显示项
+    std::vector<std::string> book_entries;
+    
+    // 创建书籍条目
+    for (const auto& b : recommended_books) {
+        // 将书籍类型转换为中文字符串
+        std::string bookTypeStr = "未知";
+        switch(b.getBookType()) {
+            case book::FICTION: bookTypeStr = "小说"; break;
+            case book::NON_FICTION: bookTypeStr = "非小说"; break;
+            case book::SCIENCE: bookTypeStr = "科学"; break;
+            case book::HISTORY: bookTypeStr = "历史"; break;
+            case book::BIOGRAPHY: bookTypeStr = "传记"; break;
+            case book::FANTASY: bookTypeStr = "奇幻"; break;
+            case book::MYSTERY: bookTypeStr = "悬疑"; break;
+            case book::ROMANCE: bookTypeStr = "爱情"; break;
+        }
+        
+        // 固定宽度以防止溢出
+        const int id_width = 8;
+        const int title_width = 20;
+        const int author_width = 15;
+        const int type_width = 10;
+        const int publisher_width = 15;
+        const int isbn_width = 15;
+        
+        // 截断过长的字符串并确保填充宽度不为负数
+        std::string id = b.getBookId().substr(0, id_width);
+        std::string title = b.getTitle().substr(0, title_width);
+        std::string author = b.getAuthor().substr(0, author_width);
+        std::string type = bookTypeStr.substr(0, type_width);
+        std::string publisher = b.getPublisher().substr(0, publisher_width);
+        std::string isbn = b.getIsbn().substr(0, isbn_width);
+        
+        // 添加空格填充至固定宽度
+        int id_padding = std::max(0, id_width - (int)id.length());
+        int title_padding = std::max(0, title_width - (int)title.length());
+        int author_padding = std::max(0, author_width - (int)author.length());
+        int type_padding = std::max(0, type_width - (int)type.length());
+        int publisher_padding = std::max(0, publisher_width - (int)publisher.length());
+        int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
+        
+        // 创建格式化的条目字符串
+        std::string entry = 
+            id + std::string(id_padding, ' ') + " | " +
+            title + std::string(title_padding, ' ') + " | " +
+            author + std::string(author_padding, ' ') + " | " +
+            type + std::string(type_padding, ' ') + " | " +
+            publisher + std::string(publisher_padding, ' ') + " | " +
+            isbn + std::string(isbn_padding, ' ');
+            
+        book_entries.push_back(entry);
+    }
+
+    // 创建菜单组件，用于显示和选择推荐书籍
+    int book_menu_selected = 0;
+    auto book_menu = Menu(&book_entries, &book_menu_selected);
+    
+    // 创建返回按钮
+    auto back_button = Button("返回", [&] {
+        screen.ExitLoopClosure()();
+        clearScreen();
+        student_dashboard_page(user);
+    });
+    
+    // 主容器
+    auto container = Container::Vertical({
+        book_menu,
+        back_button
+    });
+    
+    // 主渲染函数
+    auto renderer = Renderer(container, [&] {
+        // 表头
+        Element header = hbox({
+            text("ID") | size(WIDTH, EQUAL, 8) | bold,
+            text(" | "),
+            text("标题") | size(WIDTH, EQUAL, 20) | bold,
+            text(" | "),
+            text("作者") | size(WIDTH, EQUAL, 15) | bold,
+            text(" | "),
+            text("类型") | size(WIDTH, EQUAL, 10) | bold,
+            text(" | "),
+            text("出版社") | size(WIDTH, EQUAL, 15) | bold,
+            text(" | "),
+            text("ISBN") | size(WIDTH, EQUAL, 15) | bold
+        });
+        
+        return vbox({
+            text("个性化推荐书籍") | bold | hcenter,
+            text("用户: " + user->getName()) | hcenter,
+            separator(),
+            
+            recommended_books.empty() 
+                ? vbox({
+                    text("暂无推荐书籍，可能是因为您没有借阅记录") | hcenter,
+                    separator()
+                  })
+                : vbox({
+                    text("根据您的借阅历史，为您推荐以下书籍:") | hcenter,
+                    separator(),
+                    header,
+                    separator(),
+                    book_menu->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 15)
+                  }) | border,
+            
+            separator(),
+            back_button->Render() | hcenter
+        });
+    });
+    
+    // 启动交互循环
     screen.Loop(renderer);
 }
 
