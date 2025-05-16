@@ -1048,7 +1048,7 @@ void recommended_books_page(User* user) {
     // 创建书籍条目
     for (const auto& b : recommended_books) {
         // 将书籍类型转换为中文字符串
-        std::string bookTypeStr = "未知";
+        std::string bookTypeStr = "未知"; // Ensure this is bookTypeStr
         switch(b.getBookType()) {
             case book::FICTION: bookTypeStr = "小说"; break;
             case book::NON_FICTION: bookTypeStr = "非小说"; break;
@@ -1069,29 +1069,29 @@ void recommended_books_page(User* user) {
         const int isbn_width = 15;
         
         // 截断过长的字符串并确保填充宽度不为负数
-        std::string id = b.getBookId().substr(0, id_width);
-        std::string title = b.getTitle().substr(0, title_width);
-        std::string author = b.getAuthor().substr(0, author_width);
-        std::string type = bookTypeStr.substr(0, type_width);
-        std::string publisher = b.getPublisher().substr(0, publisher_width);
-        std::string isbn = b.getIsbn().substr(0, isbn_width);
+        std::string id_str = b.getBookId().substr(0, id_width); // Renamed id to id_str
+        std::string title_str = b.getTitle().substr(0, title_width); // Renamed title to title_str
+        std::string author_str = b.getAuthor().substr(0, author_width); // Renamed author to author_str
+        std::string type_str = bookTypeStr.substr(0, type_width); // Use bookTypeStr here, renamed result to type_str
+        std::string publisher_str = b.getPublisher().substr(0, publisher_width); // Renamed publisher to publisher_str
+        std::string isbn_str = b.getIsbn().substr(0, isbn_width); // Renamed isbn to isbn_str
         
         // 添加空格填充至固定宽度
-        int id_padding = std::max(0, id_width - (int)id.length());
-        int title_padding = std::max(0, title_width - (int)title.length());
-        int author_padding = std::max(0, author_width - (int)author.length());
-        int type_padding = std::max(0, type_width - (int)type.length());
-        int publisher_padding = std::max(0, publisher_width - (int)publisher.length());
-        int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
+        int id_padding = std::max(0, id_width - (int)id_str.length());
+        int title_padding = std::max(0, title_width - (int)title_str.length());
+        int author_padding = std::max(0, author_width - (int)author_str.length());
+        int type_padding = std::max(0, type_width - (int)type_str.length());
+        int publisher_padding = std::max(0, publisher_width - (int)publisher_str.length());
+        int isbn_padding = std::max(0, isbn_width - (int)isbn_str.length());
         
         // 创建格式化的条目字符串
         std::string entry = 
-            id + std::string(id_padding, ' ') + " | " +
-            title + std::string(title_padding, ' ') + " | " +
-            author + std::string(author_padding, ' ') + " | " +
-            type + std::string(type_padding, ' ') + " | " +
-            publisher + std::string(publisher_padding, ' ') + " | " +
-            isbn + std::string(isbn_padding, ' ');
+            id_str + std::string(id_padding, ' ') + " | " +
+            title_str + std::string(title_padding, ' ') + " | " +
+            author_str + std::string(author_padding, ' ') + " | " +
+            type_str + std::string(type_padding, ' ') + " | " +
+            publisher_str + std::string(publisher_padding, ' ') + " | " +
+            isbn_str + std::string(isbn_padding, ' ');
             
         book_entries.push_back(entry);
     }
@@ -1361,14 +1361,14 @@ void my_borrows_page(User* user) {
         const int status_width = 10;
         
         // 截断过长的字符串并确保填充宽度不为负数
-        std::string id = bookId.substr(0, id_width);
-        std::string title = bookTitle.substr(0, title_width);
-        std::string author = bookAuthor.substr(0, author_width);
+        std::string id_str = bookId.substr(0, id_width); // Renamed id to id_str to avoid conflict
+        std::string title_str = bookTitle.substr(0, title_width); // Renamed title to title_str
+        std::string author_str = bookAuthor.substr(0, author_width); // Renamed author to author_str
         
         // 添加空格填充至固定宽度
-        int id_padding = std::max(0, id_width - (int)id.length());
-        int title_padding = std::max(0, title_width - (int)title.length());
-        int author_padding = std::max(0, author_width - (int)author.length());
+        int id_padding = std::max(0, id_width - (int)id_str.length());
+        int title_padding = std::max(0, title_width - (int)title_str.length());
+        int author_padding = std::max(0, author_width - (int)author_str.length());
         int borrow_time_padding = std::max(0, borrow_time_width - (int)borrowTimeStr.length());
         int due_time_padding = std::max(0, due_time_width - (int)dueTimeStr.length());
         int return_time_padding = std::max(0, return_time_width - (int)returnTimeStr.length());
@@ -1376,9 +1376,9 @@ void my_borrows_page(User* user) {
         
         // 创建格式化的条目字符串
         std::string entry = 
-            id + std::string(id_padding, ' ') + " | " +
-            title + std::string(title_padding, ' ') + " | " +
-            author + std::string(author_padding, ' ') + " | " +
+            id_str + std::string(id_padding, ' ') + " | " +
+            title_str + std::string(title_padding, ' ') + " | " +
+            author_str + std::string(author_padding, ' ') + " | " +
             borrowTimeStr + std::string(borrow_time_padding, ' ') + " | " +
             dueTimeStr + std::string(due_time_padding, ' ') + " | " +
             returnTimeStr + std::string(return_time_padding, ' ') + " | " +
@@ -1394,44 +1394,48 @@ void my_borrows_page(User* user) {
     // 创建自定义菜单渲染器，以便对逾期的记录使用红色显示
     auto borrow_menu_renderer = Renderer(borrow_menu, [&] {
         Elements elements;
-        int index = 0;
-        for (const auto& rec : user_records) {
-            Element e = text(borrow_entries[index]);
+        if (!borrow_entries.empty()) {
+            int index = 0;
+            for (const auto& rec : user_records) {
+                if (index < borrow_entries.size()) {
+                    Element e = text(borrow_entries[index]);
             
-            // 如果未归还且逾期，显示为红色
-            if (!rec.isReturned() && rec.isOverdue()) {
-                e = e | color(Color::Red);
-            } else if (rec.isReturned() && rec.isOverdue()) {
-                // 已归还但曾经逾期，显示为黄色
-                e = e | color(Color::Yellow);
+                    // 如果未归还且逾期，显示为红色
+                    if (!rec.isReturned() && rec.isOverdue()) {
+                        e = e | color(Color::Red);
+                    } else if (rec.isReturned() && rec.isOverdue()) {
+                        // 已归还但曾经逾期，显示为黄色
+                        e = e | color(Color::Yellow);
+                    }
+            
+                    // 如果是被选中的项目，添加高亮
+                    if (index == borrow_menu_selected) {
+                        e = e | bgcolor(Color::Blue);
+                    }
+            
+                    elements.push_back(e);
+                }
+                index++;
             }
-            
-            // 如果是被选中的项目，添加高亮
-            if (index == borrow_menu_selected) {
-                e = e | bgcolor(Color::Blue);
-            }
-            
-            elements.push_back(e);
-            index++;
         }
-        return vbox(elements) | frame;
+        return vbox(elements) | frame; 
     });
     
     // 创建返回按钮
     auto back_button = Button("返回", [&] {
         screen.ExitLoopClosure()();
         clearScreen();
-        student_dashboard_page(user);
+        manage_books_page(user);
     });
     
     // 主容器
     auto container = Container::Vertical({
-        borrow_menu,
+        borrow_menu, // borrow_menu itself is added to container for event handling
         back_button
     });
     
     // 主渲染函数
-    auto renderer = Renderer(container, [&] {
+    auto renderer = Renderer(container, [&]() -> Element { // Corrected lambda signature
         // 表头
         Element header = hbox({
             text("图书ID") | size(WIDTH, EQUAL, 8) | bold,
@@ -1442,7 +1446,7 @@ void my_borrows_page(User* user) {
             text(" | "),
             text("借阅时间") | size(WIDTH, EQUAL, 20) | bold,
             text(" | "),
-            text("应归还时间") | size(WIDTH, EQUAL, 20) | bold,
+            text("应还时间") | size(WIDTH, EQUAL, 20) | bold,
             text(" | "),
             text("实际归还时间") | size(WIDTH, EQUAL, 20) | bold,
             text(" | "),
@@ -1451,17 +1455,9 @@ void my_borrows_page(User* user) {
             text("逾期信息") | size(WIDTH, EQUAL, 10) | bold
         });
         
-        // 创建说明文本
-        Elements legendElements;
-        legendElements.push_back(text("图例：") | bold);
-        legendElements.push_back(text("普通文本 - 正常借阅") | color(Color::White));
-        legendElements.push_back(text("红色文本 - 当前逾期未还") | color(Color::Red));
-        legendElements.push_back(text("黄色文本 - 已归还但曾经逾期") | color(Color::Yellow));
-        
         return vbox({
             text("我的借阅记录") | bold | hcenter,
             text("用户: " + user->getName()) | hcenter,
-            vbox(legendElements) | hcenter,
             separator(),
             
             user_records.empty() 
@@ -1472,7 +1468,7 @@ void my_borrows_page(User* user) {
                 : vbox({
                     header,
                     separator(),
-                    borrow_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 15)
+                    borrow_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 15) // Use the defined renderer
                   }) | border,
             
             separator(),
@@ -2096,7 +2092,7 @@ void search_books_page(User* user) {
         const int id_width = 8;
         const int title_width = 20;
         const int author_width = 15;
-        const int type_width = 12;
+        const int type_width = 10;
         const int publisher_width = 15;
         const int isbn_width = 15;
         const int borrower_width = 8;
@@ -2106,7 +2102,7 @@ void search_books_page(User* user) {
         std::string id = b.getBookId().substr(0, id_width);
         std::string title = b.getTitle().substr(0, title_width);
         std::string author = b.getAuthor().substr(0, author_width);
-        typeStr = typeStr.substr(0, type_width);
+        std::string type = typeStr.substr(0, type_width); // Corrected from bookTypeStr to typeStr
         std::string publisher = b.getPublisher().substr(0, publisher_width);
         std::string isbn = b.getIsbn().substr(0, isbn_width);
         
@@ -2114,7 +2110,7 @@ void search_books_page(User* user) {
         int id_padding = std::max(0, id_width - (int)id.length());
         int title_padding = std::max(0, title_width - (int)title.length());
         int author_padding = std::max(0, author_width - (int)author.length());
-        int type_padding = std::max(0, type_width - (int)typeStr.length());
+        int type_padding = std::max(0, type_width - (int)type.length());
         int publisher_padding = std::max(0, publisher_width - (int)publisher.length());
         int isbn_padding = std::max(0, isbn_width - (int)isbn.length());
         int borrower_padding = std::max(0, borrower_width - (int)borrowerId.length());
@@ -2129,7 +2125,7 @@ void search_books_page(User* user) {
                 id + std::string(id_padding, ' ') + " | " +
                 title + std::string(title_padding, ' ') + " | " +
                 author + std::string(author_padding, ' ') + " | " +
-                typeStr + std::string(type_padding, ' ') + " | " +
+                type + std::string(type_padding, ' ') + " | " +
                 publisher + std::string(publisher_padding, ' ') + " | " +
                 isbn + std::string(isbn_padding, ' ') + " | " +
                 (b.getIsAvailable() ? "可借阅" : "已借出") + " | " +
@@ -2141,7 +2137,7 @@ void search_books_page(User* user) {
                 id + std::string(id_padding, ' ') + " | " +
                 title + std::string(title_padding, ' ') + " | " +
                 author + std::string(author_padding, ' ') + " | " +
-                typeStr + std::string(type_padding, ' ') + " | " +
+                type + std::string(type_padding, ' ') + " | " +
                 publisher + std::string(publisher_padding, ' ') + " | " +
                 isbn + std::string(isbn_padding, ' ') + " | " +
                 (b.getIsAvailable() ? "可借阅" : "已借出");
@@ -2219,7 +2215,7 @@ void search_books_page(User* user) {
                 text(" | "),
                 text("作者") | size(WIDTH, EQUAL, 15),
                 text(" | "),
-                text("类型") | size(WIDTH, EQUAL, 12),
+                text("类型") | size(WIDTH, EQUAL, 10),
                 text(" | "),
                 text("出版社") | size(WIDTH, EQUAL, 15),
                 text(" | "),
@@ -2240,7 +2236,7 @@ void search_books_page(User* user) {
                 text(" | "),
                 text("作者") | size(WIDTH, EQUAL, 15),
                 text(" | "),
-                text("类型") | size(WIDTH, EQUAL, 12),
+                text("类型") | size(WIDTH, EQUAL, 10),
                 text(" | "),
                 text("出版社") | size(WIDTH, EQUAL, 15),
                 text(" | "),
@@ -2298,7 +2294,6 @@ void search_books_page(User* user) {
         });
     });
     
-    // 事件处理
     auto event_handler = CatchEvent(renderer, [&](Event event) {
         // 处理TAB键 - 在书籍区域和搜索区域之间切换
         if (event == Event::Tab) {
@@ -2347,6 +2342,9 @@ void search_books_page(User* user) {
             if (!search_entries.empty()) {
                 books_area_focused = false;
                 search_menu->TakeFocus();
+            } else {
+                books_area_focused = true;
+                books_menu->TakeFocus();
             }
             
             return true;
@@ -2510,35 +2508,41 @@ void manage_users_page(User* user) {
     std::vector<User> search_results;
     
     // 用户详情相关变量
-    bool show_user_detail = false;  // 是否显示用户详情
-    User selected_user;  // 当前选中的用户
-    std::string new_password;  // 新密码输入
-    std::string password_message;  // 密码操作结果消息
-    bool password_success = false;  // 密码修改是否成功
-    bool password_error = false;  // 密码修改是否有错误
+    bool show_user_detail = false;
+    User selected_user;
+    std::string new_password;
+    std::string password_message;
+    bool password_success = false;
+    bool password_error = false;
     
-    // TAB导航相关 - 添加三区域焦点控制变量
+    // TAB导航相关
     enum FocusArea {
         USER_LIST,
-        SEARCH_AREA,
+        SEARCH_INPUT_AREA, // Changed to be more specific
+        SEARCH_RESULT_LIST_AREA,
+        BORROW_LIST_AREA,
         PASSWORD_AREA
     };
     FocusArea current_focus = USER_LIST;
     
-    // Add boolean flag for password container visibility
-    bool password_area_visible = false;
-    
-    // 加载所有图书标题，便于查询
+    bool password_area_visible = false; // Already present, seems fine.
+
+    // Data for selected user's borrow records menu
+    std::vector<std::string> borrow_entries;
+    std::vector<bool> borrow_is_record_overdue; // Flags for overdue status in borrow_entries
+    int borrow_menu_selected = 0;
+    auto borrow_menu = Menu(&borrow_entries, &borrow_menu_selected); // Persistent borrow_menu component
+
+    // 加载所有图书标题，便于查询 (lambda defined later)
     std::map<std::string, std::string> bookTitles;
     std::ifstream bookFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/books/book.json");
     if (bookFile.is_open()) {
         try {
             json booksJson;
             bookFile >> booksJson;
-            
-            for (const auto& book : booksJson) {
-                std::string id = book["bookId"].get<std::string>();
-                std::string title = book["title"].get<std::string>();
+            for (const auto& book_item : booksJson) { // Renamed 'book' to 'book_item' to avoid conflict
+                std::string id = book_item["bookId"].get<std::string>();
+                std::string title = book_item["title"].get<std::string>();
                 bookTitles[id] = title;
             }
         } catch (const std::exception& e) {
@@ -2547,393 +2551,271 @@ void manage_users_page(User* user) {
         bookFile.close();
     }
     
-    // 模拟的借阅记录类型定义
     struct BorrowRecord {
         int bookID;
-        std::string bookTitle;   // 图书标题
+        std::string bookTitle;
         time_t borrowTime;
         time_t returnTime;
-        bool isOverdue;          // 是否逾期
-        int overdueDays;         // 逾期天数
+        bool isOverdue;
+        int overdueDays;
     };
     
-    // 从record.json加载用户的借阅记录
     auto loadUserBorrowRecords = [&bookTitles](int userId) -> std::vector<BorrowRecord> {
         std::vector<BorrowRecord> records;
-        
-        // 打开并读取record.json文件
         std::ifstream file("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
         if (!file.is_open()) {
             std::cerr << "无法打开借阅记录文件" << std::endl;
             return records;
         }
-        
         try {
-            // 解析JSON数据
             json recordsJson;
             file >> recordsJson;
-            
-            // 获取当前时间
             time_t currentTime = time(nullptr);
-            
-            // 遍历所有记录，找出属于该用户的记录
-            for (const auto& record : recordsJson) {
-                if (record["borrowerID"].get<int>() == userId) {
-                    BorrowRecord borrowRecord;
-                    borrowRecord.bookID = record["bookID"].get<int>();
-                    
-                    // 关联查询图书标题
-                    std::string bookIdStr = std::to_string(borrowRecord.bookID);
+            for (const auto& record_item : recordsJson) { // Renamed 'record' to 'record_item'
+                if (record_item["borrowerID"].get<int>() == userId) {
+                    BorrowRecord borrowRecord_item; // Renamed 'borrowRecord'
+                    borrowRecord_item.bookID = record_item["bookID"].get<int>();
+                    std::string bookIdStr = std::to_string(borrowRecord_item.bookID);
                     if (bookTitles.find(bookIdStr) != bookTitles.end()) {
-                        borrowRecord.bookTitle = bookTitles[bookIdStr];
+                        borrowRecord_item.bookTitle = bookTitles[bookIdStr];
                     } else {
-                        borrowRecord.bookTitle = "未知图书";
+                        borrowRecord_item.bookTitle = "未知图书";
                     }
-                    
-                    borrowRecord.borrowTime = record["borrowTime"].get<time_t>();
-                    borrowRecord.returnTime = record["returnTime"].get<time_t>();
-                    
-                    // 检查是否逾期（假设借阅期限为15天）
-                    const time_t borrowPeriod = 15 * 24 * 60 * 60; // 15天（秒）
-                    const time_t dueTime = borrowRecord.borrowTime + borrowPeriod;
-                    
-                    // 计算逾期天数
-                    if (borrowRecord.returnTime == 0) { // 未归还
-                        if (currentTime > dueTime) { // 已逾期
-                            borrowRecord.isOverdue = true;
-                            borrowRecord.overdueDays = (currentTime - dueTime) / (24 * 60 * 60);
+                    borrowRecord_item.borrowTime = record_item["borrowTime"].get<time_t>();
+                    borrowRecord_item.returnTime = record_item["returnTime"].get<time_t>();
+                    const time_t borrowPeriod = 15 * 24 * 60 * 60;
+                    const time_t dueTime = borrowRecord_item.borrowTime + borrowPeriod;
+                    if (borrowRecord_item.returnTime == 0) {
+                        if (currentTime > dueTime) {
+                            borrowRecord_item.isOverdue = true;
+                            borrowRecord_item.overdueDays = (currentTime - dueTime) / (24 * 60 * 60);
                         } else {
-                            borrowRecord.isOverdue = false;
-                            borrowRecord.overdueDays = 0;
+                            borrowRecord_item.isOverdue = false;
+                            borrowRecord_item.overdueDays = 0;
                         }
-                    } else { // 已归还
-                        if (borrowRecord.returnTime > dueTime) { // 归还时已逾期
-                            borrowRecord.isOverdue = false; // 已归还，不标红
-                            borrowRecord.overdueDays = (borrowRecord.returnTime - dueTime) / (24 * 60 * 60);
+                    } else {
+                        if (borrowRecord_item.returnTime > dueTime) {
+                            borrowRecord_item.isOverdue = false; 
+                            borrowRecord_item.overdueDays = (borrowRecord_item.returnTime - dueTime) / (24 * 60 * 60);
                         } else {
-                            borrowRecord.isOverdue = false;
-                            borrowRecord.overdueDays = 0;
+                            borrowRecord_item.isOverdue = false;
+                            borrowRecord_item.overdueDays = 0;
                         }
                     }
-                    
-                    records.push_back(borrowRecord);
+                    records.push_back(borrowRecord_item);
                 }
             }
         } catch (const std::exception& e) {
             std::cerr << "解析借阅记录出错: " << e.what() << std::endl;
         }
-        
         file.close();
         return records;
     };
     
-    // 格式化时间函数
-    auto formatTime = [](time_t time) -> std::string {
-        if (time == 0) return "未归还";
-        
-        struct tm* timeinfo = localtime(&time);
+    auto formatTime = [](time_t time_val) -> std::string { // Renamed 'time' to 'time_val'
+        if (time_val == 0) return "未归还";
+        struct tm* timeinfo = localtime(&time_val);
         char buffer[80];
         strftime(buffer, sizeof(buffer), "%Y-%m-%d", timeinfo);
         return std::string(buffer);
     };
     
-    // 创建用户项目的显示项
-    auto createUserEntry = [](const User& u) -> std::string {
-        // 固定宽度以防止溢出
+    auto createUserEntry = [](const User& u_entry) -> std::string { // Renamed 'u' to 'u_entry'
         const int id_width = 10;
         const int name_width = 20;
-        
-        // 截断过长的字符串并确保填充宽度不为负数
-        std::string id = std::to_string(u.getId()).substr(0, id_width);
-        std::string name = u.getName().substr(0, name_width);
-        
-        // 添加空格填充至固定宽度
+        std::string id = std::to_string(u_entry.getId()).substr(0, id_width);
+        std::string name = u_entry.getName().substr(0, name_width);
         int id_padding = std::max(0, id_width - (int)id.length());
         int name_padding = std::max(0, name_width - (int)name.length());
-        
-        // 创建格式化的条目字符串
-        std::string entry = 
-            id + std::string(id_padding, ' ') + " | " +
-            name + std::string(name_padding, ' ');
-            
+        std::string entry = id + std::string(id_padding, ' ') + " | " + name + std::string(name_padding, ' ');
         return entry;
     };
     
-    // 检查学生是否有逾期图书的函数
-    auto hasOverdueBooks = [](const User& u) -> bool {
-        // 加载所有借阅记录
+    auto hasOverdueBooks = [](const User& u_check) -> bool { // Renamed 'u' to 'u_check'
         std::vector<record> allRecords = record::readFromFile("/Users/chiyoshi/Documents/CLionOJProject/wang-chongxi-2024-25310619/records/record.json");
-        
-        // 筛选出该用户的记录
-        std::vector<record> userRecords = record::getUserRecords(u.getId(), allRecords);
-        
-        // 检查用户的记录中是否有未归还且逾期的
-        // 注意：已归还的书籍，即使之前逾期归还，也不会导致用户显示为红色
+        std::vector<record> userRecords = record::getUserRecords(u_check.getId(), allRecords);
         for (const auto& rec : userRecords) {
             if (!rec.isReturned() && rec.isOverdue()) {
-                return true; // 只有当前有未归还的逾期图书时才返回true
+                return true;
             }
         }
-        
-        // 没有未归还的逾期记录，或已归还全部图书（即使有些是逾期归还的）
         return false;
     };
     
-    // 为所有学生用户生成条目
     std::vector<std::string> users_entries;
-    std::vector<bool> is_overdue;
-    
-    for (const auto& u : student_users) {
-        users_entries.push_back(createUserEntry(u));
-        is_overdue.push_back(hasOverdueBooks(u));
+    std::vector<bool> is_overdue; // For main user list
+    for (const auto& u_item : student_users) { // Renamed 'u' to 'u_item'
+        users_entries.push_back(createUserEntry(u_item));
+        is_overdue.push_back(hasOverdueBooks(u_item));
     }
     
-    // 创建菜单组件，用于显示和选择用户
     int users_menu_selected = 0;
     auto users_menu = Menu(&users_entries, &users_menu_selected);
     
-    // 自定义菜单样式，使逾期学生显示为红色
     auto users_menu_renderer = Renderer(users_menu, [&] {
         Elements elements;
         for (size_t i = 0; i < users_entries.size(); ++i) {
             Element e = text(users_entries[i]);
-            
-            // 如果用户有未归还的逾期图书，显示为红色
-            // 否则显示为白色（包括已归还全部图书，即使有些是逾期归还的）
             if (is_overdue[i]) {
                 e = e | color(Color::Red);
             } else {
                 e = e | color(Color::White);
             }
-            
-            // 如果是被选中的项目，添加高亮
             if ((int)i == users_menu_selected) {
                 e = e | bgcolor(Color::Blue);
             }
-            
             elements.push_back(e);
         }
         return vbox(elements) | frame;
     });
     
-    // 搜索结果相关
     std::vector<std::string> search_entries;
-    std::vector<bool> search_is_overdue;
+    std::vector<bool> search_is_overdue; // For search results list
     int search_menu_selected = 0;
+    auto search_menu = Menu(&search_entries, &search_menu_selected); // Persistent search_menu component
     
-    // 创建搜索结果菜单的渲染器
-    auto search_menu = Menu(&search_entries, &search_menu_selected);
     auto search_menu_renderer = Renderer(search_menu, [&] {
         Elements elements;
         for (size_t i = 0; i < search_entries.size(); ++i) {
             Element e = text(search_entries[i]);
-            
-            // 如果有逾期图书，使用红色显示
             if (search_is_overdue[i]) {
                 e = e | color(Color::Red);
             }
-            
-            // 如果是被选中的项目，添加高亮
             if ((int)i == search_menu_selected) {
                 e = e | bgcolor(Color::Blue);
             }
-            
             elements.push_back(e);
         }
         return vbox(elements) | frame;
     });
-    
-    // 创建输入框
+
+    // Renderer for the borrow_menu (for selected user's details)
+    auto borrow_menu_renderer_for_details = Renderer(borrow_menu, [&] {
+        Elements elements;
+        // Header for borrow list
+        elements.push_back(
+            hbox({
+                text("图书ID") | size(WIDTH, EQUAL, 8) | bold, text(" | "),
+                text("图书标题") | size(WIDTH, EQUAL, 20) | bold, text(" | "),
+                text("借阅日期") | size(WIDTH, EQUAL, 12) | bold, text(" | "),
+                text("归还日期") | size(WIDTH, EQUAL, 12) | bold, text(" | "),
+                text("状态") | size(WIDTH, EQUAL, 10) | bold, text(" | "),
+                text("逾期天数") | size(WIDTH, EQUAL, 10) | bold,
+            }) | hcenter
+        );
+        elements.push_back(separator());
+
+        if (borrow_entries.empty() || borrow_entries[0] == "该用户没有借阅记录") {
+             elements.push_back(text("该用户没有借阅记录") | hcenter);
+        } else {
+            for (size_t i = 0; i < borrow_entries.size(); ++i) {
+                Element e = text(borrow_entries[i]);
+                if (borrow_is_record_overdue[i]) { // Use the correct flag vector
+                    e = e | color(Color::Red);
+                }
+                if ((int)i == borrow_menu_selected) {
+                    e = e | bgcolor(Color::Blue);
+                }
+                elements.push_back(e);
+            }
+        }
+        return vbox(elements);
+    });
+
     auto id_input = Input(&search_id, "输入用户ID搜索");
-    
-    // 创建新密码输入框
     auto password_input = Input(&new_password, "输入新密码") | size(WIDTH, EQUAL, 30);
     
-    // 创建搜索按钮
     bool search_clicked = false;
     auto search_button = Button("搜索", [&] { search_clicked = true; });
     
-    // 创建修改密码按钮
     bool change_password_clicked = false;
     auto change_password_button = Button("修改密码", [&] { change_password_clicked = true; });
     
-    // 创建返回按钮
     auto back_button = Button("返回", [&] {
         screen.ExitLoopClosure()();
         clearScreen();
         admin_dashboard_page(user);
     });
     
-    // 搜索框和按钮区域
-    auto search_container = Container::Vertical({
+    // All interactive components go into main_container
+    auto main_container = Container::Vertical({
+        users_menu,
         id_input,
         search_button,
+        search_menu, 
+        password_input,
+        change_password_button,
+        borrow_menu, 
         back_button
     });
-    
-    // 密码修改区域容器
-    auto password_container = Container::Vertical({
-        password_input,
-        change_password_button
-    });
-    
-    // 使用合适的布局容器
-    auto main_container = Container::Vertical({
-        Container::Horizontal({
-            users_menu,
-            Container::Vertical({
-                search_container
-            })
-        }),
-        password_container
-    });
 
-    // 渲染器 - Fix lambda syntax by adding () 
     auto renderer = Renderer(main_container, [&]() -> Element {
-        // 表头
         Element header = hbox({
-            text("用户ID") | size(WIDTH, EQUAL, 10),
-            text(" | "),
-            text("用户名") | size(WIDTH, EQUAL, 20)
+            text("用户ID") | size(WIDTH, EQUAL, 10) | bold, text(" | "),
+            text("用户名") | size(WIDTH, EQUAL, 20) | bold
         }) | bold;
         
-        // 根据焦点状态选择不同的边框风格和文本
-        std::string users_title, search_title, password_title;
-        
-        if (current_focus == USER_LIST) {
-            users_title = "学生用户列表 [已选中]";
-            search_title = "搜索区域";
-            password_title = "密码修改区域";
-        } else if (current_focus == SEARCH_AREA) {
-            users_title = "学生用户列表";
-            search_title = "搜索区域 [已选中]";
-            password_title = "密码修改区域";
-        } else { // PASSWORD_AREA
-            users_title = "学生用户列表";
-            search_title = "搜索区域";
-            password_title = "密码修改区域 [已选中]";
+        std::string users_title = "学生用户列表", 
+                      search_input_title = "搜索区域", 
+                      search_list_title = "搜索结果",
+                      borrow_list_title = "借阅记录",
+                      password_title_str = "密码修改区域"; // Renamed to avoid conflict
+
+        switch(current_focus) {
+            case USER_LIST: users_title += " [已选中]"; break;
+            case SEARCH_INPUT_AREA: search_input_title += " [已选中]"; break;
+            case SEARCH_RESULT_LIST_AREA: search_list_title += " [已选中]"; break;
+            case BORROW_LIST_AREA: borrow_list_title += " [已选中]"; break;
+            case PASSWORD_AREA: password_title_str += " [已选中]"; break;
         }
         
-        Elements elements;
+        Elements page_elements; // Renamed 'elements' to 'page_elements'
         
-        // 上方区域：用户列表和搜索功能
-        elements.push_back(vbox({
-            // 页面标题
+        page_elements.push_back(vbox({
             text("用户管理") | bold | hcenter,
             text("管理员: " + user->getName()) | hcenter,
             text("注：有逾期图书的学生显示为红色") | color(Color::Red) | hcenter,
             text("选中用户后按回车键查看详情") | color(Color::Blue) | hcenter,
             text("按Tab键可在列表、搜索和密码区域之间切换") | color(Color::Yellow) | hcenter,
             separator(),
-            
-            // 左侧：所有学生用户列表 + 右侧：搜索区域
             hbox({
                 vbox({
                     text(users_title) | bold | hcenter,
                     header,
                     separator(),
-                    // 在这里使用自定义渲染器
                     users_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 10)
                 }) | flex,
-                
-                // 右侧：搜索区域
                 vbox({
-                    // 搜索控件
-                    text(search_title) | bold | hcenter,
-                    
-                    // 修改为垂直布局并居中
-                    vbox({
-                        hbox(text("按ID搜索:"), id_input->Render()),
-                        search_button->Render(),
+                    text(search_input_title) | bold | hcenter,
+                    hbox(text("按ID搜索:"), id_input->Render()),
+                    search_button->Render(),
+                    separator(),
+                    has_searched ? vbox({
+                        text(search_list_title) | bold,
+                        header, 
                         separator(),
-                        
-                        // 搜索结果
-                        has_searched ? vbox({
-                            text("搜索结果") | bold,
-                            header,
-                            separator(),
-                            search_entries.empty() 
-                                ? text("没有找到用户") 
-                                : search_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 6)
-                        }) : text(""),
-                        
-                        // 返回按钮
-                        back_button->Render()
-                    }) | size(WIDTH, GREATER_THAN, 40),
+                        search_entries.empty()
+                            ? text("没有找到用户") | hcenter
+                            : search_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 6) | border
+                    }) : text(""),
+                    back_button->Render() // Moved back_button here for better layout
                 }) | size(WIDTH, EQUAL, 45),
             }),
         }));
         
-        // 下方区域：用户详情区（如果已选择用户）
         if (show_user_detail) {
-            // 获取用户的借阅记录
-            std::vector<BorrowRecord> borrow_records = loadUserBorrowRecords(selected_user.getId());
-            
-            // 创建借阅记录表格头部
-            Elements borrowed_elements;
-            borrowed_elements.push_back(
-                hbox({
-                    text("图书ID") | size(WIDTH, EQUAL, 8) | bold,
-                    text(" | "),
-                    text("图书标题") | size(WIDTH, EQUAL, 20) | bold,
-                    text(" | "),
-                    text("借阅日期") | size(WIDTH, EQUAL, 12) | bold,
-                    text(" | "),
-                    text("归还日期") | size(WIDTH, EQUAL, 12) | bold,
-                    text(" | "),
-                    text("状态") | size(WIDTH, EQUAL, 8) | bold,
-                    text(" | "),
-                    text("逾期天数") | size(WIDTH, EQUAL, 10) | bold,
-                }) | hcenter
-            );
-            borrowed_elements.push_back(separator());
-            
-            if (borrow_records.empty()) {
-                borrowed_elements.push_back(text("该用户没有借阅记录") | hcenter);
-            } else {
-                for (const auto& record : borrow_records) {
-                    // 创建一行记录
-                    Element book_entry = hbox({
-                        text(std::to_string(record.bookID)) | size(WIDTH, EQUAL, 8),
-                        text(" | "),
-                        text(record.bookTitle) | size(WIDTH, EQUAL, 20),
-                        text(" | "),
-                        text(formatTime(record.borrowTime)) | size(WIDTH, EQUAL, 12),
-                        text(" | "),
-                        text(formatTime(record.returnTime)) | size(WIDTH, EQUAL, 12),
-                        text(" | "),
-                        text(record.returnTime == 0 ? "借阅中" : "已归还") | size(WIDTH, EQUAL, 8),
-                        text(" | "),
-                        text(record.overdueDays > 0 ? std::to_string(record.overdueDays) + "天" : "-") | size(WIDTH, EQUAL, 10),
-                    });
-                    
-                    // 如果是未归还且逾期，显示为红色
-                    if (record.isOverdue && record.returnTime == 0) {
-                        book_entry = book_entry | color(Color::Red);
-                    }
-                    
-                    borrowed_elements.push_back(book_entry);
-                }
-            }
-            
-            // 添加用户详情区域
-            elements.push_back(separator());
-            elements.push_back(
+            page_elements.push_back(separator());
+            page_elements.push_back(
                 vbox({
                     text("用户详情：" + selected_user.getName() + " (ID: " + std::to_string(selected_user.getId()) + ")") | bold | hcenter,
                     separator(),
-                    
-                    // 借阅记录区域
                     vbox({
-                        text("借阅记录") | bold | hcenter,
-                        vbox(borrowed_elements) | border | size(HEIGHT, LESS_THAN, 8),
+                        text(borrow_list_title) | bold | hcenter,
+                        borrow_menu_renderer_for_details->Render() | yframe | vscroll_indicator | border | size(HEIGHT, LESS_THAN, 8),
                     }),
-                    
                     separator(),
-                    
-                    // 密码修改区域
                     vbox({
-                        text(password_title) | bold | hcenter,
+                        text(password_title_str) | bold | hcenter,
                         hbox(text("新密码: "), password_input->Render() | size(WIDTH, EQUAL, 30)) | hcenter,
                         change_password_button->Render() | hcenter,
                         password_error ? text(password_message) | color(Color::Red) | hcenter : text(""),
@@ -2941,145 +2823,137 @@ void manage_users_page(User* user) {
                     }) | border,
                 }) | border
             );
-            
-            // Update visibility flag instead of calling Show()
             password_area_visible = true;
         } else {
-            // Update visibility flag instead of calling Hide()
             password_area_visible = false;
         }
         
-        return vbox(elements);
+        return vbox(page_elements);
     });
     
-    // 事件处理
     auto event_handler = CatchEvent(renderer, [&](Event event) {
-        // 处理搜索按钮点击
         if (search_clicked) {
             search_clicked = false;
             has_searched = true;
             search_results.clear();
             search_entries.clear();
             search_is_overdue.clear();
-            
-            // 查找匹配的用户ID
-            for (const auto& u : student_users) {
-                if (std::to_string(u.getId()).find(search_id) != std::string::npos) {
-                    search_results.push_back(u);
-                    search_entries.push_back(createUserEntry(u));
-                    search_is_overdue.push_back(hasOverdueBooks(u));
+            for (const auto& u_item : student_users) { // Renamed 'u'
+                if (std::to_string(u_item.getId()).find(search_id) != std::string::npos) {
+                    search_results.push_back(u_item);
+                    search_entries.push_back(createUserEntry(u_item));
+                    search_is_overdue.push_back(hasOverdueBooks(u_item));
                 }
             }
-            
-            // 重置搜索菜单选择
             search_menu_selected = 0;
-            
-            // 如果有搜索结果，自动切换到搜索结果区域
             if (!search_entries.empty()) {
-                current_focus = SEARCH_AREA;
+                current_focus = SEARCH_RESULT_LIST_AREA; // Focus search results list
                 search_menu->TakeFocus();
+            } else {
+                current_focus = SEARCH_INPUT_AREA; // Or back to search input if no results
+                id_input->TakeFocus();
             }
-            
             return true;
         }
         
-        // 处理修改密码按钮点击
         if (change_password_clicked && show_user_detail) {
             change_password_clicked = false;
-            
-            // 验证新密码
             if (new_password.empty()) {
                 password_error = true;
                 password_success = false;
                 password_message = "密码不能为空";
                 return true;
             }
-            
-            // 调用管理员修改密码方法
             bool success = User::adminChangeUserPassword(user->getId(), selected_user.getId(), new_password);
             if (success) {
                 password_error = false;
                 password_success = true;
                 password_message = "密码修改成功";
-                new_password.clear();  // 清空密码输入
+                new_password.clear();
             } else {
                 password_error = true;
                 password_success = false;
                 password_message = "密码修改失败";
             }
-            
             return true;
         }
         
-        // 处理回车键 - 显示选中用户的详情
+        // Helper lambda to update borrow details
+        auto update_borrow_details = [&]() {
+            borrow_entries.clear();
+            borrow_is_record_overdue.clear();
+            std::vector<BorrowRecord> loaded_records = loadUserBorrowRecords(selected_user.getId());
+            if (loaded_records.empty()) {
+                borrow_entries.push_back("该用户没有借阅记录");
+                borrow_is_record_overdue.push_back(false);
+            } else {
+                for (const auto& record_item : loaded_records) { // Renamed 'record'
+                    std::string entry_str = // Renamed 'entry'
+                        std::to_string(record_item.bookID) + std::string(8 - std::to_string(record_item.bookID).length(), ' ') + " | " +
+                        record_item.bookTitle.substr(0, 20) + std::string(20 - std::min(size_t(20), record_item.bookTitle.length()), ' ') + " | " +
+                        formatTime(record_item.borrowTime) + " | " +
+                        formatTime(record_item.returnTime) + " | " +
+                        (record_item.returnTime == 0 ? "借阅中" : "已归还") + std::string(8 - (record_item.returnTime == 0 ? 6 : 6), ' ') + " | " +
+                        (record_item.overdueDays > 0 ? std::to_string(record_item.overdueDays) + "天" : "-");
+                    borrow_entries.push_back(entry_str);
+                    borrow_is_record_overdue.push_back(record_item.isOverdue && record_item.returnTime == 0);
+                }
+            }
+            borrow_menu_selected = 0;
+        };
+
         if (event == Event::Return) {
+            bool detail_shown = false;
             if (current_focus == USER_LIST && !student_users.empty()) {
-                // 从主列表获取选中的用户
                 selected_user = student_users[users_menu_selected];
-                show_user_detail = true;
-                password_error = false;
-                password_success = false;
-                new_password.clear();
-                // Update visibility flag instead of calling Show()
-                password_area_visible = true;
-                // 将焦点设置到密码输入框
-                current_focus = PASSWORD_AREA;
-                password_input->TakeFocus();
-                return true;
-            } else if (current_focus == SEARCH_AREA && has_searched && !search_results.empty()) {
-                // 从搜索结果获取选中的用户
+                detail_shown = true;
+            } else if (current_focus == SEARCH_RESULT_LIST_AREA && has_searched && !search_results.empty()) {
                 selected_user = search_results[search_menu_selected];
+                detail_shown = true;
+            }
+
+            if (detail_shown) {
                 show_user_detail = true;
                 password_error = false;
                 password_success = false;
                 new_password.clear();
-                // Update visibility flag instead of calling Show()
-                password_area_visible = true;
-                // 将焦点设置到密码输入框
-                current_focus = PASSWORD_AREA;
-                password_input->TakeFocus();
+                update_borrow_details(); // Update borrow details
+                current_focus = BORROW_LIST_AREA; // Focus borrow list first
+                borrow_menu->TakeFocus();
                 return true;
             }
         }
         
-        // 处理TAB键 - 在用户列表区域、搜索区域和密码修改区域之间切换
         if (event == Event::Tab) {
-            if (show_user_detail) {
-                // 如果显示用户详情，则在三个区域间循环切换
-                if (current_focus == USER_LIST) {
-                    current_focus = SEARCH_AREA;
-                    search_container->TakeFocus();
-                    id_input->TakeFocus();
-                } else if (current_focus == SEARCH_AREA) {
-                    current_focus = PASSWORD_AREA;
-                    // Explicitly focus on password container and its input
-                    password_container->TakeFocus();
-                    password_input->TakeFocus();
-                } else { // PASSWORD_AREA
-                    current_focus = USER_LIST;
-                    main_container->TakeFocus();
-                    users_menu->TakeFocus();
-                }
-            } else {
-                // 如果未显示用户详情，只在用户列表和搜索区域之间切换
-                if (current_focus == USER_LIST) {
-                    current_focus = SEARCH_AREA;
-                    search_container->TakeFocus();
-                    id_input->TakeFocus();
+            if (current_focus == USER_LIST) {
+                current_focus = SEARCH_INPUT_AREA; id_input->TakeFocus();
+            } else if (current_focus == SEARCH_INPUT_AREA) {
+                if (has_searched && !search_entries.empty()) {
+                    current_focus = SEARCH_RESULT_LIST_AREA; search_menu->TakeFocus();
+                } else if (show_user_detail) {
+                    current_focus = BORROW_LIST_AREA; borrow_menu->TakeFocus();
                 } else {
-                    current_focus = USER_LIST;
-                    main_container->TakeFocus();
-                    users_menu->TakeFocus();
+                    current_focus = USER_LIST; users_menu->TakeFocus();
                 }
+            } else if (current_focus == SEARCH_RESULT_LIST_AREA) {
+                 if (show_user_detail) {
+                    current_focus = BORROW_LIST_AREA; borrow_menu->TakeFocus();
+                } else {
+                    current_focus = USER_LIST; users_menu->TakeFocus();
+                }
+            } else if (current_focus == BORROW_LIST_AREA) {
+                // This area is only visible if show_user_detail is true
+                current_focus = PASSWORD_AREA; password_input->TakeFocus();
+            } else if (current_focus == PASSWORD_AREA) {
+                // This area is only visible if show_user_detail is true
+                current_focus = USER_LIST; users_menu->TakeFocus();
             }
-            
             return true;
         }
         
         return false;
     });
     
-    // 使用屏幕的 Loop 方法运行界面
     screen.Loop(event_handler);
 }
 
