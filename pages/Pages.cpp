@@ -683,9 +683,45 @@ void borrowing_status_page(User* user) {
     int unreturned_menu_selected = 0;
     auto unreturned_menu = Menu(&unreturned_entries, &unreturned_menu_selected);
     
+    // 使用自定义渲染器来为逾期项添加红色
+    auto unreturned_menu_with_style = Renderer(unreturned_menu, [&] {
+        Elements elements;
+        for (size_t i = 0; i < unreturned_entries.size(); ++i) {
+            Element element = text(unreturned_entries[i]);
+            // 如果是逾期项，添加红色
+            if (i < unreturned_records.size() && unreturned_records[i].isOverdue()) {
+                element = element | color(Color::Red);
+            }
+            // 如果是选中项，添加反色效果
+            if (i == unreturned_menu_selected) {
+                element = element | inverted;
+            }
+            elements.push_back(element);
+        }
+        return vbox(elements) | frame;
+    });
+    
     // 创建搜索结果菜单
     int search_menu_selected = 0;
     auto search_menu = Menu(&search_entries, &search_menu_selected);
+    
+    // 使用自定义渲染器来为逾期项添加红色
+    auto search_menu_with_style = Renderer(search_menu, [&] {
+        Elements elements;
+        for (size_t i = 0; i < search_entries.size(); ++i) {
+            Element element = text(search_entries[i]);
+            // 如果是逾期项，添加红色
+            if (i < search_results.size() && search_results[i].isOverdue()) {
+                element = element | color(Color::Red);
+            }
+            // 如果是选中项，添加反色效果
+            if (i == search_menu_selected) {
+                element = element | inverted;
+            }
+            elements.push_back(element);
+        }
+        return vbox(elements) | frame;
+    });
     
     // 创建日期输入框
     auto date_input_field = Input(&date_input, "输入日期 (YYYYMMDD)");
@@ -712,51 +748,9 @@ void borrowing_status_page(User* user) {
         search_menu
     });
     
-    // 自定义菜单渲染器，以便对逾期的记录使用红色显示
-    auto unreturned_menu_renderer = Renderer(unreturned_menu, [&] {
-        Elements elements;
-        int index = 0;
-        for (const auto& rec : unreturned_records) {
-            Element e = text(unreturned_entries[index]);
-            
-            // 如果逾期，显示为红色
-            if (rec.isOverdue()) {
-                e = e | color(Color::Red);
-            }
-            
-            // 如果是被选中的项目，添加高亮
-            if (index == unreturned_menu_selected) {
-                e = e | bgcolor(Color::Blue);
-            }
-            
-            elements.push_back(e);
-            index++;
-        }
-        return vbox(elements) | frame;
-    });
+
     
-    // 搜索结果渲染器
-    auto search_menu_renderer = Renderer(search_menu, [&] {
-        Elements elements;
-        int index = 0;
-        for (const auto& rec : search_results) {
-            Element e = text(search_entries[index]);
-            
-            // 如果逾期，显示为红色
-            if (rec.isOverdue()) {
-                e = e | color(Color::Red);
-            }
-            
-            // 如果是被选中的项目，添加高亮
-            if (index == search_menu_selected) {
-                e = e | bgcolor(Color::Blue);
-            }
-            
-            elements.push_back(e);
-            index++;
-        }
-        return vbox(elements) | frame;
-    });
+
     
     // 主渲染函数
     auto renderer = Renderer(container, [&] {
@@ -800,7 +794,7 @@ void borrowing_status_page(User* user) {
                 : vbox({
                     header,
                     separator(),
-                    unreturned_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 10)
+                    unreturned_menu_with_style->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 10)
                   }) | border,
             
             separator(),
@@ -820,7 +814,7 @@ void borrowing_status_page(User* user) {
                         : vbox({
                             header,
                             separator(),
-                            search_menu_renderer->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 6)
+                            search_menu_with_style->Render() | yframe | vscroll_indicator | size(HEIGHT, LESS_THAN, 6)
                           })
                 }) : text("")
             }) | border,
