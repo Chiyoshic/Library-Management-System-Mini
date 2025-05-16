@@ -51,8 +51,15 @@
   - **统计信息**：通过 `view_stats_page()` 实现，显示所有图书的借阅次数统计，按借阅次数降序排列，包含图书ID、标题、作者、类型和借阅次数。
 
 ### （5）DIY功能模块
-- **功能概述**：实现了一个创新功能，即图书借阅次数统计和可视化展示，帮助管理员了解图书的受欢迎程度。
-- **实现细节**：
+
+#### a. 根据借阅类型推荐书籍  
+- **功能概述**：实现了一个创新功能，即可以通过统计该用户借阅书籍最多的类型推荐其他书籍。  
+- **实现细节**：  
+  该功能通过`std::vector<book> book::recommendBooks(int userId)`实现。首先，从`record.json`文件中加载用户的所有借阅记录，统计每种图书类型（如FICTION、SCIENCE等）的借阅次数。找到出现次数最多的类型后，筛选所有可借阅的图书，排除用户已借阅过的书籍，最终返回与该类型匹配的推荐列表。例如，若用户最常借阅FICTION类型，系统会推荐其他可借阅的FICTION类图书。该实现考虑了用户偏好和图书可用性，确保推荐的书籍既符合兴趣又可立即借阅。  
+
+#### b. 借阅次数统计  
+- **功能概述**：实现了一个创新功能，即图书借阅次数统计和可视化展示，帮助管理员了解图书的受欢迎程度。  
+- **实现细节**：  
   - **借阅次数统计**：通过 `view_stats_page()` 实现，统计每本图书的借阅次数，数据从 `record.json` 文件读取，展示时按借阅次数降序排列，方便管理员分析热门图书。
 
 # 二、系统设计
@@ -132,13 +139,13 @@ graph TD
     %% 前端交互层子模块
     A --> A1[登录模块<br>admin_login_page<br>student_login_page<br>student_register_page]
     A --> A2[图书管理模块<br>manage_books_page<br>search_books_page<br>delete_book_page<br>borrowing_status_page<br>add_book_page]
-    A --> A3[学生功能模块<br>student_dashboard_page<br>search_books_page<br>borrow_return_page<br>my_borrows_page<br>change_password_page]
+    A --> A3[学生功能模块<br>student_dashboard_page<br>search_books_page<br>borrow_return_page<br>my_borrows_page<br>change_password_page<br>recommended_books_page]
     A --> A4[管理员功能模块<br>manage_users_page<br>view_stats_page]
 
     %% 业务逻辑层子模块
-    B --> B1[用户管理<br>User::authenticate<br>User::registerUser<br>User::changePassword]
-    B --> B2[图书管理<br>book::addBook<br>book::updateBook<br>book::findBookById<br>book::loadAllBooks]
-    B --> B3[借阅管理<br>record::addReturnRecord<br>record::getUnreturnedRecords<br>record::isBookBorrowed]
+    B --> B1[用户管理<br>User::authenticate<br>User::registerUser<br>User::changePassword<br>User::adminChangeUserPassword]
+    B --> B2[图书管理<br>book::addBook<br>book::updateBook<br>book::findBookById<br>book::loadAllBooks<br>book::recommendBooks]
+    B --> B3[借阅管理<br>record::addReturnRecord<br>record::getUnreturnedRecords<br>record::isBookBorrowed<br>record::getUserRecordsFromFile]
     B --> B4[统计分析<br>record::getBookBorrowCountsFromFile]
 
     %% 数据存储层子模块
@@ -153,6 +160,7 @@ graph TD
     A3 --> B3
     A4 --> B1
     A4 --> B4
+    A3 --> B2{A3调用B2推荐书籍}
     B1 --> C2
     B2 --> C1
     B3 --> C3
@@ -761,6 +769,50 @@ flowchart TD
 - **修改密码主页面流程**：展示了 `change_password_page` 的功能，学生输入原密码和新密码后可选择确认修改或返回。
 - **验证和修改密码页面流程**：描述了验证原密码、检查新密码合法性以及更新密码的流程，成功后返回学生仪表板，失败则返回修改页面。
 
+### 9. 学生用户推荐书籍模块流程图
+
+#### 推荐书籍主页面流程 (`recommended_books_page`)
+
+```mermaid
+flowchart TD
+    A[开始] --> B[显示推荐书籍页面]
+    B --> C[调用book::recommendBooks获取推荐列表]
+    C --> D[渲染推荐书籍列表]
+    D --> E[用户选择查看或返回]
+    E --> F[点击返回按钮]
+    F --> G[返回学生仪表板<br>student_dashboard_page]
+    E --> H[结束]
+    G --> H
+
+    %% 样式
+    classDef default fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;
+    class A,B,C,D,E,F,G,H default;
+```
+
+#### 推荐书籍生成流程
+
+```mermaid
+flowchart TD
+    A[开始] --> B[输入用户ID]
+    B --> C[从record.json加载用户借阅记录]
+    C --> D[统计每种图书类型的借阅次数]
+    D --> E[确定最常借阅的类型]
+    E --> F{用户是否有借阅记录?}
+    F -->|无| G[默认类型设为FICTION]
+    F -->|有| H[筛选未借阅且可借阅的图书]
+    G --> H
+    H --> I[返回推荐书籍列表]
+    I --> J[结束]
+
+    %% 样式
+    classDef default fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;
+    class A,B,C,D,E,F,G,H,I,J default;
+```
+
+#### 说明
+- **推荐书籍主页面流程**：展示 `recommended_books_page` 的功能，系统根据用户ID调用推荐算法生成列表，学生可查看推荐或返回仪表板。
+- **推荐书籍生成流程**：描述了 `book::recommendBooks` 的工作过程，通过分析用户借阅记录统计类型偏好，若无记录则默认推荐FICTION类型，最终返回符合条件的推荐列表。
+
 # 三、功能实现
 
 ## 1、主要函数：函数名及参数含义
@@ -920,31 +972,35 @@ flowchart TD
 学生借阅记录页面展示学生的所有借阅记录，包括图书信息、借阅时间、应还时间和状态。逾期未还记录以红色高亮，已归还但曾逾期的以黄色高亮。  
 ![学生借阅记录页面](images/stu_record.png)
 
-### (10) 学生修改密码页面  
+### (10) 学生推荐书籍页面  
+学生推荐书籍页面为学生提供个性化推荐，基于其借阅记录分析最常借阅的图书类型，展示未借阅且可借阅的同类型图书信息，包括图书ID、标题、作者、类型等。推荐列表以表格形式展示，若无记录则提示用户暂无推荐。  
+![学生推荐书籍页面](images/stu_recommend.png)
+
+### (11) 学生修改密码页面  
 学生修改密码页面允许学生输入原密码和新密码进行修改。验证通过后自动返回学生仪表板，失败则提示错误信息。  
 ![学生修改密码页面](images/stu_password.png)
 
-### (11) 管理员图书管理页面  
+### (12) 管理员图书管理页面  
 管理员图书管理页面是管理员管理图书的入口，提供录入图书、查询图书、删除图书和查看借阅状态等功能选项。  
 ![管理员图书管理页面](images/admin_book_management.png)
 
-### (12) 管理员录入图书页面  
+### (13) 管理员录入图书页面  
 管理员录入图书页面允许管理员输入图书ID、标题、作者、出版社、ISBN 和类型等信息，点击保存或更新完成操作，成功后返回图书管理页面。  
 ![管理员录入图书页面](images/admin_book_register.png)
 
-### (13) 管理员删除图书页面  
+### (14) 管理员删除图书页面  
 管理员删除图书页面支持管理员输入图书ID执行删除操作，成功后自动返回图书管理页面，失败则提示错误信息。  
 ![管理员删除图书页面](images/admin_book_deletion.png)
 
-### (14) 管理员借阅状态页面  
+### (15) 管理员借阅状态页面  
 管理员借阅状态页面展示所有未归还图书的借阅记录，支持按归还日期查询到期或即将到期的图书，逾期记录以红色高亮。  
 ![管理员借阅状态页面](images/admin_book_stus.png)
 
-### (15) 管理员用户管理页面  
+### (16) 管理员用户管理页面  
 管理员用户管理页面允许管理员查看学生用户列表、搜索用户、查看用户借阅记录，并为学生重置密码，逾期未还用户以红色高亮。  
 ![管理员用户管理页面](images/admin_user_management.png)
 
-### (16) 管理员统计信息页面  
+### (17) 管理员统计信息页面  
 管理员统计信息页面展示所有图书的借阅次数统计，按借阅次数降序排列，包含图书ID、标题、作者、类型和借阅次数。  
 ![管理员统计信息页面](images/admin_user_stus.png)
 
